@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Help Astro Land</title>
+<style>
+  :root{
+    --space-deep:#0B0F2E;
+    --space-mid:#1B2454;
+    --astro-green:#7ED957;
+    --astro-green-dark:#4FA82E;
+    --fuel-amber:#FFC93C;
+    --ui-cyan:#5FD9E8;
+    --panel:#141A3D;
+    --white:#F4F7FF;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--space-deep);
+    font-family:'Baloo 2','Trebuchet MS','Verdana',sans-serif;
+    overflow:hidden; touch-action:none;
+  }
+  #game-container{
+    position:relative;
+    width:100%;
+    height:100vh;
+    min-height:420px;
+    background:linear-gradient(180deg,#070A22 0%,#131A46 60%,#1D2A66 100%);
+    overflow:hidden;
+    user-select:none;
+  }
+  canvas{
+    display:block;
+    width:100%;
+    height:100%;
+  }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:absolute; top:0; left:0; width:100%;
+    padding:14px 16px;
+    display:flex; align-items:center; gap:12px;
+    pointer-events:none;
+    z-index:5;
+  }
+  #progress-wrap{
+    flex:1;
+    display:flex; align-items:center; gap:8px;
+    background:rgba(10,14,40,0.55);
+    border:2px solid rgba(95,217,232,0.35);
+    border-radius:999px;
+    padding:6px 10px;
+    backdrop-filter:blur(2px);
+  }
+  #progress-track{
+    position:relative;
+    flex:1;
+    height:10px;
+    background:rgba(255,255,255,0.12);
+    border-radius:999px;
+    overflow:visible;
+  }
+  #progress-fill{
+    position:absolute; left:0; top:0; height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--astro-green-dark),var(--astro-green));
+    border-radius:999px;
+    transition:width .12s linear;
+  }
+  #progress-ship{
+    position:absolute; top:50%; left:0%;
+    transform:translate(-50%,-50%);
+    font-size:16px;
+    transition:left .12s linear;
+  }
+  .earth-icon-small{font-size:18px;}
+  #energy-badge{
+    pointer-events:none;
+    background:rgba(10,14,40,0.55);
+    border:2px solid rgba(255,201,60,0.45);
+    border-radius:999px;
+    padding:6px 12px;
+    color:var(--white);
+    font-weight:700;
+    font-size:14px;
+    display:flex; align-items:center; gap:6px;
+    white-space:nowrap;
+  }
+  #shield-wrap{
+    position:absolute; top:56px; left:16px;
+    display:flex; gap:5px;
+    z-index:5;
+    pointer-events:none;
+  }
+  .shield-pip{
+    width:16px; height:16px; border-radius:50%;
+    background:var(--ui-cyan);
+    box-shadow:0 0 6px rgba(95,217,232,0.8);
+    opacity:1;
+    transition:opacity .2s, transform .2s;
+  }
+  .shield-pip.off{ opacity:0.18; box-shadow:none; }
+
+  /* ---------- Touch controls ---------- */
+  #controls{
+    position:absolute; bottom:22px; left:0; width:100%;
+    display:flex; justify-content:space-between; padding:0 22px;
+    z-index:5;
+    pointer-events:none;
+  }
+  .ctrl-btn{
+    pointer-events:auto;
+    width:64px; height:64px; border-radius:50%;
+    background:rgba(20,26,61,0.7);
+    border:2px solid rgba(95,217,232,0.5);
+    color:var(--white);
+    font-size:28px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 10px rgba(0,0,0,0.35);
+    user-select:none;
+  }
+  .ctrl-btn:active{ background:rgba(95,217,232,0.35); transform:scale(0.94); }
+
+  /* ---------- Overlays ---------- */
+  .overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:24px;
+    background:radial-gradient(ellipse at center, rgba(20,26,72,0.92) 0%, rgba(7,10,34,0.97) 75%);
+    z-index:20;
+    gap:18px;
+  }
+  .hidden{ display:none !important; }
+
+  .overlay h1{
+    color:var(--white);
+    font-size:clamp(28px,6vw,44px);
+    margin:0;
+    letter-spacing:0.5px;
+    text-shadow:0 3px 0 rgba(0,0,0,0.25);
+  }
+  .overlay p.sub{
+    color:#C7CFF2;
+    font-size:clamp(14px,3vw,18px);
+    margin:0;
+    max-width:420px;
+    line-height:1.5;
+  }
+  .icon-row{
+    display:flex; gap:22px; align-items:center; justify-content:center;
+    margin:4px 0;
+  }
+  .icon-chip{
+    background:rgba(255,255,255,0.06);
+    border:2px solid rgba(95,217,232,0.35);
+    border-radius:16px;
+    padding:10px 14px;
+    font-size:26px;
+    color:var(--white);
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  .icon-chip span.label{ font-size:11px; color:#AEB8E8; font-weight:600;}
+
+  .big-btn{
+    font-family:inherit;
+    font-size:22px;
+    font-weight:800;
+    color:#08340C;
+    background:linear-gradient(180deg,#9BEE6E,var(--astro-green) 60%,var(--astro-green-dark));
+    border:none;
+    border-radius:999px;
+    padding:16px 44px;
+    cursor:pointer;
+    box-shadow:0 6px 0 #2F6B1B, 0 10px 18px rgba(0,0,0,0.35);
+    transition:transform .08s ease;
+  }
+  .big-btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #2F6B1B, 0 4px 10px rgba(0,0,0,0.35); }
+
+  .ghost-btn{
+    font-family:inherit;
+    font-size:15px; font-weight:700;
+    color:var(--ui-cyan);
+    background:transparent;
+    border:2px solid rgba(95,217,232,0.5);
+    border-radius:999px;
+    padding:10px 22px;
+    cursor:pointer;
+  }
+  .ghost-btn:active{ background:rgba(95,217,232,0.15); }
+
+  #astro-portrait{
+    width:120px; height:120px;
+  }
+
+  #end-message{
+    font-size:clamp(30px,7vw,52px);
+    color:var(--fuel-amber);
+    font-weight:800;
+    text-shadow:0 3px 0 rgba(0,0,0,0.3);
+    margin:0;
+  }
+
+  .toast{
+    position:absolute; left:50%; bottom:14%;
+    transform:translateX(-50%);
+    background:rgba(10,14,40,0.85);
+    border:2px solid rgba(126,217,87,0.6);
+    color:var(--white);
+    padding:10px 20px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s, transform .3s;
+    z-index:30;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+
+  #word-popup{
+    position:absolute; left:50%; top:32%;
+    transform:translate(-50%,-50%) scale(0.7);
+    background:rgba(10,14,40,0.92);
+    border:3px solid var(--fuel-amber);
+    border-radius:22px;
+    padding:22px 30px;
+    text-align:center;
+    z-index:25;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .22s ease, transform .22s ease;
+    box-shadow:0 10px 30px rgba(0,0,0,0.45);
+  }
+  #word-popup.show{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+    pointer-events:auto;
+  }
+  #word-popup-emoji{ font-size:40px; line-height:1; margin-bottom:6px; }
+  #word-popup-text{
+    font-size:clamp(20px,4.5vw,30px);
+    font-weight:800;
+    color:var(--white);
+    letter-spacing:0.5px;
+    margin-bottom:12px;
+    white-space:nowrap;
+  }
+  #word-popup-hear{
+    font-family:inherit;
+    font-size:14px; font-weight:700;
+    color:#08340C;
+    background:var(--fuel-amber);
+    border:none;
+    border-radius:999px;
+    padding:8px 16px;
+    cursor:pointer;
+  }
+  #word-popup-hear:active{ transform:scale(0.96); }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <canvas id="game-canvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="progress-wrap">
+      <span style="font-size:18px;">🚀</span>
+      <div id="progress-track">
+        <div id="progress-fill"></div>
+        <div id="progress-ship">🛸</div>
+      </div>
+      <span class="earth-icon-small">🌍</span>
+    </div>
+    <div id="energy-badge">⭐ <span id="energy-count">0</span>/10 words</div>
+  </div>
+  <div id="shield-wrap">
+    <div class="shield-pip" data-pip="0"></div>
+    <div class="shield-pip" data-pip="1"></div>
+    <div class="shield-pip" data-pip="2"></div>
+  </div>
+
+  <!-- Touch controls -->
+  <div id="controls">
+    <div class="ctrl-btn" id="btn-left">◀</div>
+    <div class="ctrl-btn" id="btn-right">▶</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div id="word-popup">
+    <div id="word-popup-emoji">👋</div>
+    <div id="word-popup-text">HELLO</div>
+    <button id="word-popup-hear">🔊 Hear it again</button>
+  </div>
+
+  <!-- Start overlay -->
+  <div class="overlay" id="start-overlay">
+    <img id="astro-portrait" src="astro_wave.png" alt="Astro" onerror="this.style.display='none'">
+    <h1>Help Astro Land!</h1>
+    <p class="sub">Astro is flying to Earth for the first time. Steer his ship, dodge the space rocks, and collect the glowing stars to meet new English words!</p>
+    <div class="icon-row">
+      <div class="icon-chip">🖱️<span class="label">DRAG</span></div>
+      <div class="icon-chip">⬅️➡️<span class="label">ARROW KEYS</span></div>
+      <div class="icon-chip">👆<span class="label">TAP BUTTONS</span></div>
+    </div>
+    <button class="big-btn" id="start-btn">START</button>
+  </div>
+
+  <!-- End overlay -->
+  <div class="overlay hidden" id="end-overlay">
+    <img id="astro-happy-portrait" src="astro_happy.png" alt="Astro happy" onerror="this.style.display='none'">
+    <p id="end-message">Wow! Earth!</p>
+    <p class="sub" id="end-sub">Astro made it safely to Earth.</p>
+    <button class="big-btn" id="continue-btn">CONTINUE</button>
+    <button class="ghost-btn" id="replay-btn">Play Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  function boot(){
+
+    /* =========================================================
+       ASSET PLACEHOLDER LOADER
+       Drop in files with these exact names next to this HTML
+       file and they will be used automatically instead of the
+       built-in vector placeholders:
+         astro_spaceship.png   (player ship, ~120x90, facing up)
+         asteroid.png          (square-ish, transparent bg)
+         earth.png             (square, transparent bg, circular planet)
+         astro_wave.png        (start screen portrait)
+         astro_happy.png       (end screen portrait)
+    ========================================================= */
+    function loadAsset(src){
+      var img = new Image();
+      var state = { ready:false };
+      img.onload = function(){ state.ready = (img.naturalWidth > 0); };
+      img.onerror = function(){ state.ready = false; };
+      img.src = src;
+      state.img = img;
+      return state;
+    }
+    var ASSET_SHIP   = loadAsset('astro_spaceship.png');
+    var ASSET_ROCK   = loadAsset('asteroid.png');
+    var ASSET_EARTH  = loadAsset('earth.png');
+
+    /* =========================================================
+       CANVAS SETUP
+    ========================================================= */
+    var canvas = document.getElementById('game-canvas');
+    var ctx = canvas.getContext('2d');
+    var container = document.getElementById('game-container');
+    var W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+    function resize(){
+      var rect = container.getBoundingClientRect();
+      W = rect.width; H = rect.height;
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    /* =========================================================
+       UTILITIES
+    ========================================================= */
+    function rand(a,b){ return a + Math.random()*(b-a); }
+    function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+    function lerp(a,b,t){ return a + (b-a)*t; }
+
+    /* Tiny WebAudio blips - no external audio files needed */
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    var actx = null;
+    function tone(freq, dur, type, vol){
+      try{
+        if(!actx) actx = new AudioCtx();
+        var o = actx.createOscillator();
+        var g = actx.createGain();
+        o.type = type || 'sine';
+        o.frequency.value = freq;
+        g.gain.value = (vol!=null?vol:0.15);
+        o.connect(g); g.connect(actx.destination);
+        var now = actx.currentTime;
+        g.gain.setValueAtTime(g.gain.value, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now+dur);
+        o.start(now);
+        o.stop(now+dur);
+      }catch(e){}
+    }
+    function sfxCollect(){ tone(880,0.12,'triangle',0.18); setTimeout(function(){tone(1320,0.12,'triangle',0.15);},70); }
+    function sfxHit(){ tone(160,0.2,'sawtooth',0.16); }
+    function sfxWhoosh(){ tone(220,0.5,'sine',0.12); }
+    function sfxSuccess(){
+      [523,659,784,1047].forEach(function(f,i){
+        setTimeout(function(){ tone(f,0.28,'triangle',0.16); }, i*110);
+      });
+    }
+
+    /* ---------------------------------------------------------
+       SPOKEN WORDS (text-to-speech, no audio files required)
+       Drop a matching mp3 (see AUDIO_MAP below) next to this file
+       to use a recorded voice instead of the built-in browser voice.
+    --------------------------------------------------------- */
+    function speakFallback(text){
+      try{
+        if('speechSynthesis' in window){
+          window.speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(text);
+          u.rate = 0.82; u.pitch = 1.05; u.lang = 'en-US';
+          window.speechSynthesis.speak(u);
+        }
+      }catch(e){}
+    }
+    function speakWord(text, audioName){
+      var done = false;
+      if(audioName){
+        var a = new Audio(audioName);
+        a.oncanplaythrough = function(){ if(!done){ done = true; a.play(); } };
+        a.onerror = function(){ if(!done){ done = true; speakFallback(text); } };
+        a.load();
+        setTimeout(function(){ if(!done){ done = true; speakFallback(text); } }, 700);
+      } else {
+        speakFallback(text);
+      }
+    }
+
+    /* Target vocabulary - shown on the collectible stars so the
+       teacher can introduce/read each word as the child plays. */
+    var VOCAB = [
+      { word:'HELLO',              audio:'vocab_hello.mp3',            emoji:'👋' },
+      { word:'GOODBYE',            audio:'vocab_goodbye.mp3',          emoji:'👋' },
+      { word:'MEET',               audio:'vocab_meet.mp3',             emoji:'🤝' },
+      { word:'FRIEND',             audio:'vocab_friend.mp3',           emoji:'🧑‍🤝‍🧑' },
+      { word:'NEW',                audio:'vocab_new.mp3',              emoji:'✨' },
+      { word:'NAME',               audio:'vocab_name.mp3',             emoji:'📛' },
+      { word:'WHERE',              audio:'vocab_where.mp3',            emoji:'📍' },
+      { word:'LIVE',               audio:'vocab_live.mp3',             emoji:'🏠' },
+      { word:'LIKE',               audio:'vocab_like.mp3',             emoji:'💚' },
+      { word:'HOW OLD ARE YOU?',   audio:'vocab_howoldareyou.mp3',     emoji:'🎂' }
+    ];
+    var vocabBag = [];
+    function nextVocabWord(){
+      if(vocabBag.length === 0){
+        vocabBag = VOCAB.slice();
+        for(var i=vocabBag.length-1;i>0;i--){
+          var j = Math.floor(Math.random()*(i+1));
+          var t = vocabBag[i]; vocabBag[i]=vocabBag[j]; vocabBag[j]=t;
+        }
+      }
+      return vocabBag.pop();
+    }
+    var uniqueWordsMet = new Set();
+
+
+    /* =========================================================
+       GAME STATE
+    ========================================================= */
+    var STATE = { READY:'ready', PLAY:'play', LANDING:'landing', DONE:'done' };
+    var state = STATE.READY;
+
+    var DURATION_MS = 190000; // ~3.2 minutes of flight before Earth arrival
+    var elapsed = 0;
+    var progress = 0; // 0..100
+
+    var ship = {
+      x: 0, y: 0, targetX: 0,
+      w: 70, h: 56,
+      tilt: 0,
+      invuln: 0,
+      flameT: 0
+    };
+
+    var shieldPips = 3;
+    var shieldRegenTimer = 0;
+    var SHIELD_REGEN_MS = 14000;
+
+    var energy = 0;
+
+    var keyDir = 0; // -1, 0, 1
+    var dragging = false;
+
+    var rocks = [];
+    var orbs = [];
+    var particles = [];
+    var stars = [];
+
+    var spawnRockTimer = 0;
+    var spawnOrbTimer = 0;
+
+    var shakeT = 0, shakeMag = 0;
+
+    /* ---- starfield ---- */
+    function initStars(){
+      stars = [];
+      var n = 70;
+      for(var i=0;i<n;i++){
+        stars.push({
+          x:rand(0,W), y:rand(0,H),
+          r:rand(0.6,2.0),
+          speed:rand(18,55),
+          tw: rand(0,Math.PI*2)
+        });
+      }
+    }
+
+    function resetGame(){
+      elapsed = 0; progress = 0;
+      ship.x = W/2; ship.targetX = W/2; ship.y = H*0.76; ship.tilt = 0; ship.invuln = 0;
+      shieldPips = 3; shieldRegenTimer = 0;
+      energy = 0;
+      uniqueWordsMet = new Set();
+      vocabBag = [];
+      document.getElementById('energy-count').textContent = '0';
+      updateShieldUI();
+      rocks = []; orbs = []; particles = [];
+      spawnRockTimer = 400; spawnOrbTimer = 1200;
+      keyDir = 0; dragging = false;
+      initStars();
+      document.getElementById('progress-fill').style.width='0%';
+      document.getElementById('progress-ship').style.left='0%';
+    }
+
+    function updateShieldUI(){
+      var pips = document.querySelectorAll('.shield-pip');
+      pips.forEach(function(p,i){
+        p.classList.toggle('off', i >= shieldPips);
+      });
+    }
+
+    /* =========================================================
+       SPAWNING
+    ========================================================= */
+    function spawnRock(){
+      var r = rand(20,38);
+      var seedPts = [];
+      var n = 8;
+      for(var i=0;i<n;i++){
+        var ang = (i/n) * Math.PI*2;
+        var rr = r * rand(0.72,1.08);
+        seedPts.push({ x:Math.cos(ang)*rr, y:Math.sin(ang)*rr });
+      }
+      rocks.push({
+        x: rand(r, W-r), y: -r-10,
+        r: r,
+        speed: rand(70,120) + progress*0.9,
+        rot: rand(0,Math.PI*2),
+        rotSpeed: rand(-0.8,0.8),
+        pts: seedPts,
+        craters:[{x:r*-0.2,y:r*-0.15,cr:r*0.28},{x:r*0.3,y:r*0.2,cr:r*0.18}]
+      });
+    }
+
+    function spawnOrb(){
+      var r = 14;
+      orbs.push({
+        x: rand(r+10, W-r-10), y: -r-10,
+        r: r,
+        speed: rand(90,130),
+        pulse: rand(0,Math.PI*2),
+        vocab: nextVocabWord()
+      });
+    }
+
+    function burst(x,y,color,count){
+      for(var i=0;i<count;i++){
+        var ang = rand(0,Math.PI*2);
+        var sp = rand(40,160);
+        particles.push({
+          x:x, y:y,
+          vx:Math.cos(ang)*sp, vy:Math.sin(ang)*sp,
+          life: rand(0.35,0.7), age:0,
+          r: rand(2,4.5),
+          color: color
+        });
+      }
+    }
+
+    /* =========================================================
+       INPUT
+    ========================================================= */
+    function pointerToLocalX(e){
+      var rect = canvas.getBoundingClientRect();
+      var clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      return clientX - rect.left;
+    }
+    canvas.addEventListener('pointerdown', function(e){
+      if(state !== STATE.PLAY) return;
+      dragging = true;
+      ship.targetX = pointerToLocalX(e);
+    });
+    canvas.addEventListener('pointermove', function(e){
+      if(state !== STATE.PLAY || !dragging) return;
+      ship.targetX = pointerToLocalX(e);
+    });
+    window.addEventListener('pointerup', function(){ dragging = false; });
+    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive:false});
+
+    window.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keyDir = -1;
+      if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keyDir = 1;
+    });
+    window.addEventListener('keyup', function(e){
+      if(['ArrowLeft','a','A','ArrowRight','d','D'].indexOf(e.key) !== -1) keyDir = 0;
+    });
+
+    function bindHold(el, dir){
+      var on = function(e){ e.preventDefault(); keyDir = dir; };
+      var off = function(){ if(keyDir===dir) keyDir = 0; };
+      el.addEventListener('pointerdown', on);
+      el.addEventListener('pointerup', off);
+      el.addEventListener('pointerleave', off);
+      el.addEventListener('pointercancel', off);
+    }
+    bindHold(document.getElementById('btn-left'), -1);
+    bindHold(document.getElementById('btn-right'), 1);
+
+    /* =========================================================
+       UPDATE
+    ========================================================= */
+    var lastT = null;
+    function update(dt){
+      if(state === STATE.PLAY){
+        elapsed += dt*1000;
+        var timeProgress = clamp((elapsed/DURATION_MS)*100, 0, 100);
+        progress = Math.max(progress, timeProgress);
+        progress = clamp(progress, 0, 100);
+
+        // ship control
+        if(keyDir !== 0){
+          ship.targetX += keyDir * 320 * dt;
+        }
+        ship.targetX = clamp(ship.targetX, ship.w*0.5, W - ship.w*0.5);
+        var prevX = ship.x;
+        ship.x = lerp(ship.x, ship.targetX, Math.min(1, dt*8));
+        var vx = (ship.x - prevX)/Math.max(dt,0.0001);
+        ship.tilt = clamp(vx * 0.0018, -0.45, 0.45);
+        ship.flameT += dt;
+
+        if(ship.invuln > 0) ship.invuln -= dt*1000;
+
+        // shield regen
+        if(shieldPips < 3){
+          shieldRegenTimer += dt*1000;
+          if(shieldRegenTimer >= SHIELD_REGEN_MS){
+            shieldRegenTimer = 0;
+            shieldPips = Math.min(3, shieldPips+1);
+            updateShieldUI();
+          }
+        }
+
+        // spawn
+        spawnRockTimer -= dt*1000;
+        var rockInterval = Math.max(430, 950 - progress*4.5);
+        if(spawnRockTimer <= 0){ spawnRock(); spawnRockTimer = rockInterval * rand(0.75,1.25); }
+
+        spawnOrbTimer -= dt*1000;
+        if(spawnOrbTimer <= 0){ spawnOrb(); spawnOrbTimer = rand(2600,4200); }
+
+        // update rocks
+        for(var i=rocks.length-1;i>=0;i--){
+          var rk = rocks[i];
+          rk.y += rk.speed*dt;
+          rk.rot += rk.rotSpeed*dt;
+          if(rk.y - rk.r > H+40){ rocks.splice(i,1); continue; }
+          if(ship.invuln <= 0){
+            var dx = rk.x-ship.x, dy = rk.y-ship.y;
+            var dist = Math.sqrt(dx*dx+dy*dy);
+            if(dist < rk.r + ship.w*0.30){
+              hitShip(rk.x, rk.y);
+              rocks.splice(i,1);
+            }
+          }
+        }
+
+        // update orbs
+        for(var j=orbs.length-1;j>=0;j--){
+          var ob = orbs[j];
+          ob.y += ob.speed*dt;
+          ob.pulse += dt*6;
+          if(ob.y - ob.r > H+40){ orbs.splice(j,1); continue; }
+          var ddx = ob.x-ship.x, ddy = ob.y-ship.y;
+          var ddist = Math.sqrt(ddx*ddx+ddy*ddy);
+          if(ddist < ob.r + ship.w*0.32){
+            orbs.splice(j,1);
+            collectOrb(ob.x,ob.y,ob.vocab);
+          }
+        }
+
+        if(progress >= 100){
+          startLanding();
+        }
+      }
+
+      if(state === STATE.LANDING){
+        updateLanding(dt);
+      }
+
+      // particles (always)
+      for(var p=particles.length-1;p>=0;p--){
+        var pt = particles[p];
+        pt.age += dt;
+        if(pt.age >= pt.life){ particles.splice(p,1); continue; }
+        pt.x += pt.vx*dt; pt.y += pt.vy*dt;
+        pt.vx *= 0.94; pt.vy *= 0.94;
+      }
+
+      // stars
+      var starSpeedMul = (state===STATE.PLAY || state===STATE.LANDING) ? 1 : 0.3;
+      for(var s=0;s<stars.length;s++){
+        var st = stars[s];
+        st.y += st.speed*dt*starSpeedMul;
+        st.tw += dt*3;
+        if(st.y > H+2){ st.y = -2; st.x = rand(0,W); }
+      }
+
+      if(shakeT > 0) shakeT -= dt*1000;
+
+      // UI progress bar
+      var fill = document.getElementById('progress-fill');
+      var shipMark = document.getElementById('progress-ship');
+      fill.style.width = progress.toFixed(1)+'%';
+      shipMark.style.left = clamp(progress,2,97).toFixed(1)+'%';
+    }
+
+    function hitShip(x,y){
+      ship.invuln = 1200;
+      shieldPips = Math.max(0, shieldPips-1);
+      shieldRegenTimer = 0;
+      updateShieldUI();
+      shakeT = 260; shakeMag = 9;
+      burst(x,y,'#FF7A59',16);
+      sfxHit();
+    }
+
+    function collectOrb(x,y,vocab){
+      progress = clamp(progress + 0.4, 0, 100);
+      burst(x,y,'#FFC93C',14);
+      sfxCollect();
+      if(vocab){
+        uniqueWordsMet.add(vocab.word);
+        document.getElementById('energy-count').textContent = String(uniqueWordsMet.size);
+        showWordPopup(vocab);
+      }
+    }
+
+    var wordPopupTimer = null;
+    function showWordPopup(vocab){
+      var pop = document.getElementById('word-popup');
+      document.getElementById('word-popup-emoji').textContent = vocab.emoji;
+      document.getElementById('word-popup-text').textContent = vocab.word;
+      pop.classList.add('show');
+      speakWord(vocab.word, vocab.audio);
+      document.getElementById('word-popup-hear').onclick = function(){ speakWord(vocab.word, vocab.audio); };
+      clearTimeout(wordPopupTimer);
+      wordPopupTimer = setTimeout(function(){ pop.classList.remove('show'); }, 1700);
+    }
+
+    /* ---- Landing sequence ---- */
+    var landing = null;
+    function startLanding(){
+      state = STATE.LANDING;
+      rocks = []; orbs = [];
+      landing = {
+        t:0,
+        dur: 3200,
+        startX: ship.x, startY: ship.y,
+        earthY0: H+140,
+        earthY1: H*0.55,
+        earthR0: 30,
+        earthR1: Math.max(W,H)*0.62,
+        bounced:false
+      };
+      sfxWhoosh();
+    }
+    function updateLanding(dt){
+      landing.t += dt*1000;
+      var tt = clamp(landing.t/landing.dur,0,1);
+      var ease = tt<0.5 ? 2*tt*tt : -1+(4-2*tt)*tt; // easeInOutQuad
+
+      ship.x = lerp(landing.startX, W/2, ease);
+      ship.y = lerp(landing.startY, H*0.52, ease);
+      ship.tilt = Math.sin(tt*Math.PI)*0.12;
+
+      if(tt >= 1 && !landing.bounced){
+        landing.bounced = true;
+        burst(ship.x, ship.y+18, '#F4F7FF', 22);
+        sfxSuccess();
+        setTimeout(finishGame, 500);
+      }
+    }
+    function finishGame(){
+      state = STATE.DONE;
+      document.getElementById('end-overlay').classList.remove('hidden');
+    }
+
+    /* =========================================================
+       DRAW
+    ========================================================= */
+    function drawBackground(){
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<stars.length;i++){
+        var s = stars[i];
+        var a = 0.5 + Math.sin(s.tw)*0.5;
+        ctx.globalAlpha = 0.35 + a*0.55;
+        ctx.fillStyle = '#DCE6FF';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawShipFallback(x,y,w,h,tilt,flameT){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(tilt);
+
+      // flame
+      var flick = 0.7 + Math.sin(flameT*28)*0.3;
+      ctx.beginPath();
+      ctx.moveTo(-w*0.16, h*0.30);
+      ctx.quadraticCurveTo(0, h*0.30 + 18*flick, w*0.16, h*0.30);
+      ctx.closePath();
+      var fg = ctx.createLinearGradient(0,h*0.30,0,h*0.30+22);
+      fg.addColorStop(0,'rgba(255,201,60,0.95)');
+      fg.addColorStop(1,'rgba(255,122,89,0)');
+      ctx.fillStyle = fg;
+      ctx.fill();
+
+      // fins
+      ctx.fillStyle = '#3C4A8C';
+      ctx.beginPath();
+      ctx.moveTo(-w*0.32,h*0.06); ctx.lineTo(-w*0.56,h*0.28); ctx.lineTo(-w*0.18,h*0.20); ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(w*0.32,h*0.06); ctx.lineTo(w*0.56,h*0.28); ctx.lineTo(w*0.18,h*0.20); ctx.closePath(); ctx.fill();
+
+      // body
+      var bodyGrad = ctx.createLinearGradient(0,-h*0.5,0,h*0.35);
+      bodyGrad.addColorStop(0,'#F4F7FF');
+      bodyGrad.addColorStop(1,'#B9C4E8');
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.ellipse(0,0, w*0.5, h*0.5, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#5FD9E8';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // cockpit bubble
+      ctx.beginPath();
+      ctx.ellipse(0,-h*0.08, w*0.30, h*0.30, 0, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(180,230,255,0.55)';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#5FD9E8';
+      ctx.stroke();
+
+      // astro face
+      ctx.fillStyle = '#7ED957';
+      ctx.beginPath();
+      ctx.ellipse(0,-h*0.06, w*0.185, h*0.20, 0, 0, Math.PI*2);
+      ctx.fill();
+      // eyes
+      ctx.fillStyle = '#0B0F2E';
+      ctx.beginPath(); ctx.ellipse(-w*0.06,-h*0.09, w*0.035,h*0.05,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(w*0.06,-h*0.09, w*0.035,h*0.05,0,0,Math.PI*2); ctx.fill();
+      // smile
+      ctx.strokeStyle = '#0B0F2E';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(0,-h*0.02, w*0.06, 0.15*Math.PI, 0.85*Math.PI);
+      ctx.stroke();
+      // antennae
+      ctx.strokeStyle = '#4FA82E';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-w*0.06,-h*0.24); ctx.lineTo(-w*0.10,-h*0.34); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w*0.06,-h*0.24); ctx.lineTo(w*0.10,-h*0.34); ctx.stroke();
+      ctx.fillStyle = '#7ED957';
+      ctx.beginPath(); ctx.arc(-w*0.10,-h*0.34,2.4,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(w*0.10,-h*0.34,2.4,0,Math.PI*2); ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawShip(){
+      var flashOn = ship.invuln > 0 && Math.floor(ship.invuln/90)%2===0;
+      ctx.save();
+      if(flashOn) ctx.globalAlpha = 0.4;
+      if(ASSET_SHIP.ready){
+        ctx.save();
+        ctx.translate(ship.x, ship.y);
+        ctx.rotate(ship.tilt);
+        ctx.drawImage(ASSET_SHIP.img, -ship.w*0.6, -ship.h*0.6, ship.w*1.2, ship.h*1.2);
+        ctx.restore();
+      } else {
+        drawShipFallback(ship.x, ship.y, ship.w, ship.h, ship.tilt, ship.flameT);
+      }
+      ctx.restore();
+    }
+
+    function drawRock(rk){
+      ctx.save();
+      ctx.translate(rk.x, rk.y);
+      ctx.rotate(rk.rot);
+      if(ASSET_ROCK.ready){
+        ctx.drawImage(ASSET_ROCK.img, -rk.r, -rk.r, rk.r*2, rk.r*2);
+      } else {
+        var grad = ctx.createRadialGradient(-rk.r*0.3,-rk.r*0.3,rk.r*0.1, 0,0, rk.r);
+        grad.addColorStop(0,'#8B7E6C');
+        grad.addColorStop(1,'#4A4032');
+        ctx.beginPath();
+        ctx.moveTo(rk.pts[0].x, rk.pts[0].y);
+        for(var i=1;i<rk.pts.length;i++) ctx.lineTo(rk.pts[i].x, rk.pts[i].y);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        rk.craters.forEach(function(c){
+          ctx.beginPath(); ctx.arc(c.x,c.y,c.cr,0,Math.PI*2); ctx.fill();
+        });
+      }
+      ctx.restore();
+    }
+
+    function drawOrb(ob){
+      ctx.save();
+      var pulse = 1 + Math.sin(ob.pulse)*0.12;
+      ctx.translate(ob.x, ob.y);
+      ctx.beginPath();
+      ctx.arc(0,0, ob.r*1.7*pulse, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,201,60,0.18)';
+      ctx.fill();
+      var grad = ctx.createRadialGradient(-ob.r*0.3,-ob.r*0.3,1, 0,0,ob.r);
+      grad.addColorStop(0,'#FFF3C4');
+      grad.addColorStop(1,'#FFC93C');
+      ctx.beginPath();
+      ctx.arc(0,0, ob.r*pulse, 0, Math.PI*2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.restore();
+
+      if(ob.vocab){
+        ctx.save();
+        ctx.font = "700 13px 'Baloo 2','Trebuchet MS',sans-serif";
+        var label = ob.vocab.word;
+        var padX = 8;
+        var textW = ctx.measureText(label).width;
+        var boxW = textW + padX*2;
+        var boxH = 20;
+        var bx = clamp(ob.x - boxW/2, 4, W - boxW - 4);
+        var by = ob.y - ob.r - boxH - 6;
+        ctx.fillStyle = 'rgba(10,14,40,0.72)';
+        ctx.strokeStyle = 'rgba(255,201,60,0.7)';
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, bx, by, boxW, boxH, 10);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#FFF3C4';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, bx+padX, by+boxH/2+1);
+        ctx.restore();
+      }
+    }
+    function roundRect(ctx,x,y,w,h,r){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r);
+      ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r);
+      ctx.arcTo(x,y,x+w,y,r);
+      ctx.closePath();
+    }
+
+    function drawEarthFallback(x,y,r){
+      ctx.save();
+      ctx.translate(x,y);
+      // glow
+      var glow = ctx.createRadialGradient(0,0,r*0.85,0,0,r*1.25);
+      glow.addColorStop(0,'rgba(95,217,232,0.35)');
+      glow.addColorStop(1,'rgba(95,217,232,0)');
+      ctx.beginPath(); ctx.arc(0,0,r*1.25,0,Math.PI*2); ctx.fillStyle=glow; ctx.fill();
+
+      var oceanGrad = ctx.createRadialGradient(-r*0.3,-r*0.3,r*0.2, 0,0,r);
+      oceanGrad.addColorStop(0,'#6FE3E8');
+      oceanGrad.addColorStop(1,'#1C6FB0');
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fillStyle = oceanGrad; ctx.fill();
+
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = '#5FCB6B';
+      function blob(bx,by,br){
+        ctx.beginPath();
+        ctx.ellipse(bx,by,br, br*0.7, rand(-0.3,0.3),0,Math.PI*2);
+        ctx.fill();
+      }
+      blob(-r*0.35,-r*0.2,r*0.42);
+      blob(r*0.28, r*0.05, r*0.34);
+      blob(-r*0.05, r*0.42, r*0.28);
+      ctx.fillStyle='rgba(255,255,255,0.55)';
+      ctx.beginPath(); ctx.ellipse(r*0.15,-r*0.45,r*0.5,r*0.14,0.3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-r*0.35,r*0.3,r*0.42,r*0.12,-0.2,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+    function drawEarth(){
+      if(state !== STATE.LANDING && state !== STATE.DONE) return;
+      var tt = landing ? clamp(landing.t/landing.dur,0,1) : 1;
+      var y = lerp(landing.earthY0, landing.earthY1, tt);
+      var r = lerp(landing.earthR0, landing.earthR1, tt);
+      if(ASSET_EARTH.ready){
+        ctx.drawImage(ASSET_EARTH.img, W/2-r, y-r, r*2, r*2);
+      } else {
+        drawEarthFallback(W/2, y, r);
+      }
+    }
+
+    function drawParticles(){
+      for(var i=0;i<particles.length;i++){
+        var p = particles[i];
+        var a = 1 - p.age/p.life;
+        ctx.globalAlpha = Math.max(a,0);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function draw(){
+      ctx.save();
+      if(shakeT > 0){
+        var m = shakeMag * (shakeT/260);
+        ctx.translate(rand(-m,m), rand(-m,m));
+      }
+      drawBackground();
+      drawEarth();
+      if(state === STATE.PLAY){
+        rocks.forEach(drawRock);
+        orbs.forEach(drawOrb);
+      }
+      if(state === STATE.PLAY || state === STATE.LANDING) drawShip();
+      drawParticles();
+      ctx.restore();
+    }
+
+    /* =========================================================
+       MAIN LOOP
+    ========================================================= */
+    function loop(ts){
+      if(lastT === null) lastT = ts;
+      var dt = Math.min((ts-lastT)/1000, 0.05);
+      lastT = ts;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    /* =========================================================
+       UI WIRING
+    ========================================================= */
+    function showToast(msg){
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 2600);
+    }
+
+    document.getElementById('start-btn').addEventListener('click', function(){
+      document.getElementById('start-overlay').classList.add('hidden');
+      resetGame();
+      state = STATE.PLAY;
+      if(AudioCtx && !actx){ try{ actx = new AudioCtx(); }catch(e){} }
+    });
+
+    document.getElementById('replay-btn').addEventListener('click', function(){
+      document.getElementById('end-overlay').classList.add('hidden');
+      resetGame();
+      state = STATE.PLAY;
+    });
+
+    document.getElementById('continue-btn').addEventListener('click', function(){
+      // Hook for the teacher / lesson platform: listen for this event
+      // to advance to the vocabulary activity (Wordwall Open the Box).
+      window.dispatchEvent(new CustomEvent('astroGame1Complete'));
+      try{ window.parent.postMessage({ type:'astroGame1Complete' }, '*'); }catch(e){}
+      showToast('Great job! Ask your teacher what comes next 🌟');
+    });
+
+    /* =========================================================
+       INIT
+    ========================================================= */
+    initStars();
+    ship.x = W/2; ship.targetX = W/2; ship.y = H*0.76;
+    requestAnimationFrame(loop);
+
+  }
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>
