@@ -163,13 +163,14 @@ let voice=null;
 function pickVoice(){const vs=speechSynthesis.getVoices();voice=vs.find(v=>/en[-_]US/i.test(v.lang)&&/female|samantha|google us/i.test(v.name))||vs.find(v=>/^en/i.test(v.lang))||null;}
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
 let cur=null;
-function say(text,key){
-  try{
-    if(cur){cur.pause();cur=null;}
-    if(key&&AUDIO[key]){cur=new Audio(AUDIO[key]);cur.play().catch(()=>{});return;}
-    if(!('speechSynthesis' in window))return;
-    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.88;u.pitch=1.1;if(voice)u.voice=voice;speechSynthesis.speak(u);
-  }catch(e){}
+// returns when the line has finished, so the next step never cuts it off
+function say(text,key,interrupt){
+  return new Promise(res=>{const done=()=>res();setTimeout(done,900+text.length*95);
+    try{
+      if(key&&AUDIO[key]){if(cur)cur.pause();cur=new Audio(AUDIO[key]);cur.onended=done;cur.play().catch(done);return;}
+      if(!('speechSynthesis' in window))return done();
+      if(interrupt)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.82;u.pitch=1.1;if(voice)u.voice=voice;u.onend=done;u.onerror=done;speechSynthesis.speak(u);
+    }catch(e){done();}});
 }
 $('inAstro').src=IMG.astro_wave;$('inAlex').src=IMG.alex_smile;$('endAstro').src=IMG.astro_celebrate;$('endAlex').src=IMG.alex_celebrate;
 
@@ -202,9 +203,10 @@ function startRound(){
   });
   astro('neutral','Who is <b>'+R.word+'</b>?');
   show('game');
+  try{speechSynthesis.cancel();}catch(e){}
   setTimeout(()=>say('Click the '+R.word.toLowerCase()+' person.',R.word),350);
 }
-$('speakBtn').onclick=()=>say('Click the '+ROUNDS[r].word.toLowerCase()+' person.',ROUNDS[r].word);
+$('speakBtn').onclick=()=>say('Click the '+ROUNDS[r].word.toLowerCase()+' person.',ROUNDS[r].word,true);
 
 /* hit test against each person's real outline, not just a rectangle */
 function hit(sx,sy){
@@ -227,9 +229,8 @@ $('stage').addEventListener('click',e=>{
 function miss(L){
   tries++;
   L.el.classList.remove('nope');void L.el.offsetWidth;L.el.classList.add('nope');
-  const t=TRY[(tries-1)%TRY.length];
-  astro('encourage',t+' Who is <b>'+ROUNDS[r].word+'</b>?',true);
-  say(t+' Click the '+ROUNDS[r].word.toLowerCase()+' person.');
+  astro('encourage','Try again! Who is <b>'+ROUNDS[r].word+'</b>?',true);
+  say('Try again! Click the '+ROUNDS[r].word.toLowerCase()+' person.',null,true);
 }
 function win(L){
   solved=true;const R=ROUNDS[r];firstTry[r]=(tries===0);
@@ -245,8 +246,8 @@ function win(L){
   const stamp=document.createElement('div');stamp.className='stamp';stamp.textContent=R.word+'!';st.appendChild(stamp);
   for(let i=0;i<8;i++)setTimeout(()=>{const f=document.createElement('div');f.className='fx';f.textContent=FX[R.word][i%2];
     f.style.left=((L.x+Math.random()*L.w)/SW*100)+'%';f.style.top=((L.y+L.h*(.15+Math.random()*.5))/SH*100)+'%';st.appendChild(f);setTimeout(()=>f.remove(),2300);},i*200);
-  say(yesSpeak(R.word));
-  setTimeout(()=>{astro('celebrate',yesText(R.word));$('nextBtn').textContent=r<ROUNDS.length-1?'NEXT ▶':'FINISH ▶';$('nextBtn').classList.remove('hidden');},1500);
+  const spoken=say('Yes! '+R.word.toLowerCase()+'!',null,true);
+  Promise.all([spoken,new Promise(z=>setTimeout(z,1500))]).then(()=>{if(!solved||ROUNDS[r]!==R)return;astro('celebrate',yesText(R.word));$('nextBtn').textContent=r<ROUNDS.length-1?'NEXT ▶':'FINISH ▶';$('nextBtn').classList.remove('hidden');});
 }
 $('nextBtn').onclick=e=>{e.stopPropagation();r++;if(r<ROUNDS.length)startRound();else finish();};
 function finish(){
@@ -254,7 +255,7 @@ function finish(){
   $('endText').textContent='You solved all 8 cases! You found '+n+' of 8 on the first try.';
   const b=$('badges');b.innerHTML='';
   ROUNDS.forEach((R,i)=>{const s=document.createElement('span');s.textContent='🔍';s.title=R.word;if(!firstTry[i])s.className='dim';b.appendChild(s);});
-  show('end');say('Great job, detective! You solved all the cases!');
+  show('end');say('Great job, detective!');
 }
 $('startBtn').onclick=()=>{r=0;firstTry=[];startRound();};
 $('againBtn').onclick=()=>{show('intro');};
