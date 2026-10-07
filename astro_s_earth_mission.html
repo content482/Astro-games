@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTRO'S EARTH MISSION</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rubik', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .title-font {
+            font-family: 'Fredoka One', cursive;
+        }
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 2s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.9)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 25px rgba(250, 204, 21, 1)); transform: scale(1.05); }
+        }
+        .pulse-target {
+            animation: pulse-glow 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-indigo-950 text-slate-100 overflow-x-hidden min-h-screen flex flex-col items-center justify-center p-2 md:p-4">
+
+    <div id="app" class="relative w-full max-w-6xl mx-auto h-[90vh] max-h-[850px] bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col border-4 border-indigo-500">
+
+        <!-- INTRO SCREEN -->
+        <div id="intro-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-between p-6 bg-gradient-to-b from-indigo-900 via-purple-900 to-slate-900">
+            <!-- Background Preview Scene -->
+            <div class="absolute inset-0 opacity-20 bg-cover bg-center pointer-events-none" style="background-image: url('earth_scene_2.jpeg')"></div>
+
+            <div class="z-10 text-center mt-2">
+                <span class="bg-emerald-500 text-slate-950 font-bold px-4 py-1 rounded-full text-sm uppercase tracking-wider shadow-md">Israeli EFL 3rd-4th Grade Mission</span>
+                <h1 class="title-font text-3xl md:text-6xl text-yellow-300 mt-2 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">ASTRO'S EARTH MISSION</h1>
+                <p class="text-lg md:text-2xl text-cyan-200 mt-1 font-medium">אסטרו בכדור הארץ - משימת מציאת חפצים</p>
+            </div>
+
+            <!-- Intro Animation Showcase -->
+            <div class="z-10 flex flex-col md:flex-row items-center justify-center gap-6 my-auto">
+                <div id="intro-ufo-container" class="relative flex flex-col items-center animate-bounce-slow">
+                    <img id="intro-ufo-img" src="astro_ufo.png" alt="Astro's UFO" class="w-40 md:w-60 drop-shadow-2xl object-contain">
+                    <div class="w-28 h-6 bg-cyan-400 opacity-60 blur-md rounded-full mt-2 animate-pulse"></div>
+                </div>
+                
+                <div class="relative bg-white/95 text-slate-900 p-6 rounded-3xl shadow-2xl max-w-md border-4 border-yellow-400 text-center transform hover:scale-105 transition">
+                    <div class="absolute -left-4 top-8 w-0 h-0 border-t-8 border-t-transparent border-r-8 border-r-white border-b-8 border-b-transparent"></div>
+                    <p class="title-font text-2xl md:text-3xl text-indigo-700 leading-tight">HI, EARTH!<br>I AM ASTRO!</p>
+                    <p class="text-lg md:text-xl font-bold text-emerald-600 mt-2" dir="rtl">שלום כדור הארץ, אני אסטרו!</p>
+                    <p class="text-md text-slate-700 mt-2 font-medium">LET'S FIND SOME THINGS!</p>
+                    <button onclick="speakIntro()" class="mt-4 bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold px-4 py-2 rounded-xl text-sm shadow flex items-center justify-center gap-2 mx-auto cursor-pointer">
+                        🔊 Listen / שמע
+                    </button>
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <div class="z-10 mb-2">
+                <button onclick="startGame()" class="title-font bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-2xl md:text-5xl px-12 py-4 rounded-3xl shadow-[0_8px_0_rgb(4,120,87)] active:translate-y-2 active:shadow-[0_2px_0_rgb(4,120,87)] transition transform hover:scale-105 flex items-center gap-4 cursor-pointer">
+                    <span>🚀 START / התחל</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN GAMEPLAY SCREEN -->
+        <div id="game-screen" class="relative w-full h-full flex flex-col hidden cursor-none select-none">
+            
+            <div class="bg-indigo-900/90 border-b-2 border-indigo-700 p-2 md:p-3 flex flex-wrap items-center justify-between gap-2 z-30">
+                <div class="flex items-center gap-3">
+                    <span class="title-font text-yellow-300 text-lg md:text-2xl tracking-wide">🌍 ASTRO'S MISSION</span>
+                    <div class="bg-indigo-950 px-3 py-1 rounded-xl border border-indigo-600 flex items-center gap-2">
+                        <span class="text-sm font-bold text-cyan-300">⏱️ Time:</span>
+                        <span id="timer-display" class="title-font text-xl text-emerald-400">03:00</span>
+                    </div>
+                </div>
+
+                <!-- Vocabulary Key Items -->
+                <div class="flex items-center gap-2 md:gap-3 overflow-x-auto py-1">
+                    
+                    <!-- Item 1: FRIEND -->
+                    <div id="key-item-0" onclick="previewWord('friend')" onmouseenter="speakWord('friend')" class="flex items-center gap-2 bg-indigo-950/80 px-3 py-1.5 rounded-2xl border-2 border-indigo-600 cursor-pointer hover:border-yellow-400 transition">
+                        <img src="alex_friend.png" class="w-8 h-8 rounded-full object-cover bg-indigo-900 border border-yellow-300" alt="Friend">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-yellow-300">FRIEND</span>
+                            <span id="status-0" class="text-[10px] text-slate-400">Hidden 🔍</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 2: NAME -->
+                    <div id="key-item-1" onclick="previewWord('name')" onmouseenter="speakWord('name')" class="flex items-center gap-2 bg-indigo-950/80 px-3 py-1.5 rounded-2xl border-2 border-indigo-600 cursor-pointer hover:border-yellow-400 transition">
+                        <img src="name_speech_bubble.png" class="w-8 h-8 rounded object-contain bg-indigo-900 border border-yellow-300" alt="Name">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-yellow-300">NAME</span>
+                            <span id="status-1" class="text-[10px] text-slate-400">Hidden 🔍</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 3: HELLO -->
+                    <div id="key-item-2" onclick="previewWord('hello')" onmouseenter="speakWord('hello')" class="flex items-center gap-2 bg-indigo-950/80 px-3 py-1.5 rounded-2xl border-2 border-indigo-600 cursor-pointer hover:border-yellow-400 transition">
+                        <img src="hello_waving.png" class="w-8 h-8 rounded-full object-cover bg-indigo-900 border border-yellow-300" alt="Hello">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-yellow-300">HELLO</span>
+                            <span id="status-2" class="text-[10px] text-slate-400">Hidden 🔍</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 4: LIKE -->
+                    <div id="key-item-3" onclick="previewWord('like')" onmouseenter="speakWord('like')" class="flex items-center gap-2 bg-indigo-950/80 px-3 py-1.5 rounded-2xl border-2 border-indigo-600 cursor-pointer hover:border-yellow-400 transition">
+                        <img src="like_thumbs_up.png" class="w-8 h-8 rounded-full object-cover bg-indigo-900 border border-yellow-300" alt="Like">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-yellow-300">LIKE</span>
+                            <span id="status-3" class="text-[10px] text-slate-400">Hidden 🔍</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="playground" class="relative flex-1 w-full h-full overflow-hidden bg-slate-950" onmousemove="handleMouseMove(event)" ontouchmove="handleTouchMove(event)" ontouchstart="handleTouchMove(event)">
+                
+                <!-- Main Earth Scene Background Image -->
+                <img src="earth_scene_2.jpeg" alt="School Playground Scene" class="absolute inset-0 w-full h-full object-cover select-none pointer-events-none">
+
+                <!-- TARGET 1: FRIEND (Alex) -->
+                <div id="target-0" class="absolute cursor-pointer transition-all duration-300 group pulse-target" style="left: 70%; top: 58%; width: 9%; height: 28%;" onclick="foundTarget(0)">
+                    <div class="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-yellow-400 group-hover:bg-yellow-400/20 transition flex items-center justify-center"></div>
+                    <img src="alex_friend.png" alt="Friend Target" class="w-full h-full object-contain filter drop-shadow-md">
+                    <div id="badge-0" class="hidden absolute -top-3 -right-3 bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded-full text-xs shadow-lg animate-bounce">✓ FRIEND</div>
+                </div>
+
+                <!-- TARGET 2: NAME (Speech Bubble) -->
+                <div id="target-1" class="absolute cursor-pointer transition-all duration-300 group pulse-target" style="left: 45%; top: 68%; width: 10%; height: 16%;" onclick="foundTarget(1)">
+                    <div class="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-yellow-400 group-hover:bg-yellow-400/20 transition flex items-center justify-center"></div>
+                    <img src="name_speech_bubble.png" alt="Name Target" class="w-full h-full object-contain filter drop-shadow-md">
+                    <div id="badge-1" class="hidden absolute -top-3 -right-3 bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded-full text-xs shadow-lg animate-bounce">✓ NAME</div>
+                </div>
+
+                <!-- TARGET 3: HELLO (Waving Person) -->
+                <div id="target-2" class="absolute cursor-pointer transition-all duration-300 group pulse-target" style="left: 6%; top: 46%; width: 8%; height: 32%;" onclick="foundTarget(2)">
+                    <div class="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-yellow-400 group-hover:bg-yellow-400/20 transition flex items-center justify-center"></div>
+                    <img src="hello_waving.png" alt="Hello Target" class="w-full h-full object-contain filter drop-shadow-md">
+                    <div id="badge-2" class="hidden absolute -top-3 -right-3 bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded-full text-xs shadow-lg animate-bounce">✓ HELLO</div>
+                </div>
+
+                <!-- TARGET 4: LIKE (Thumbs-up Person) -->
+                <div id="target-3" class="absolute cursor-pointer transition-all duration-300 group pulse-target" style="left: 88%; top: 68%; width: 9%; height: 28%;" onclick="foundTarget(3)">
+                    <div class="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-yellow-400 group-hover:bg-yellow-400/20 transition flex items-center justify-center"></div>
+                    <img src="like_thumbs_up.png" alt="Like Target" class="w-full h-full object-contain filter drop-shadow-md">
+                    <div id="badge-3" class="hidden absolute -top-3 -right-3 bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded-full text-xs shadow-lg animate-bounce">✓ LIKE</div>
+                </div>
+
+                <!-- Astro Custom Cursor Element -->
+                <div id="astro-cursor" class="absolute pointer-events-none z-40 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-75" style="left: 50%; top: 50%;">
+                    <div class="relative flex flex-col items-center">
+                        <img src="astro.png" alt="Astro Cursor" class="w-20 h-20 md:w-28 md:h-28 object-contain filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.6)] animate-bounce-slow">
+                        <div class="bg-indigo-900/90 text-yellow-300 text-xs font-bold px-2 py-0.5 rounded-full border border-yellow-400 shadow-md whitespace-nowrap mt-[-10px]">Astro 🛸</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SUCCESS SCREEN -->
+        <div id="success-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-emerald-900 via-indigo-950 to-slate-900 hidden text-center">
+            <div class="bg-slate-900/90 p-8 rounded-3xl border-4 border-emerald-400 max-w-xl w-full shadow-2xl">
+                <span class="text-6xl">🎉🌟🚀</span>
+                <h2 class="title-font text-4xl md:text-5xl text-yellow-300 mt-4">MISSION COMPLETE!</h2>
+                <p class="text-2xl font-bold text-emerald-400 mt-2">ASTRO FOUND EVERYTHING!</p>
+                <p class="text-slate-300 text-lg mt-2">אסטרו מצא הכל! עבודה מצוינת!</p>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-6">
+                    <div class="bg-indigo-900/80 p-3 rounded-2xl border border-indigo-600 flex flex-col items-center">
+                        <img src="alex_friend.png" class="w-12 h-12 object-cover rounded-full bg-indigo-950">
+                        <span class="text-xs font-bold text-yellow-300 mt-1">FRIEND</span>
+                    </div>
+                    <div class="bg-indigo-900/80 p-3 rounded-2xl border border-indigo-600 flex flex-col items-center">
+                        <img src="name_speech_bubble.png" class="w-12 h-12 object-contain bg-indigo-950 rounded-lg">
+                        <span class="text-xs font-bold text-yellow-300 mt-1">NAME</span>
+                    </div>
+                    <div class="bg-indigo-900/80 p-3 rounded-2xl border border-indigo-600 flex flex-col items-center">
+                        <img src="hello_waving.png" class="w-12 h-12 object-cover rounded-full bg-indigo-950">
+                        <span class="text-xs font-bold text-yellow-300 mt-1">HELLO</span>
+                    </div>
+                    <div class="bg-indigo-900/80 p-3 rounded-2xl border border-indigo-600 flex flex-col items-center">
+                        <img src="like_thumbs_up.png" class="w-12 h-12 object-cover rounded-full bg-indigo-950">
+                        <span class="text-xs font-bold text-yellow-300 mt-1">LIKE</span>
+                    </div>
+                </div>
+
+                <button onclick="restartGame()" class="title-font bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-2xl px-8 py-3 rounded-2xl shadow-lg transition transform hover:scale-105 cursor-pointer">
+                    🎮 PLAY AGAIN / שחק שוב
+                </button>
+            </div>
+        </div>
+
+        <!-- TIMEOUT SCREEN -->
+        <div id="timeout-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-indigo-950 via-purple-950 to-slate-900 hidden text-center">
+            <div class="bg-slate-900/90 p-8 rounded-3xl border-4 border-yellow-400 max-w-xl w-full shadow-2xl">
+                <span class="text-6xl">⏱️🛸</span>
+                <h2 class="title-font text-3xl md:text-4xl text-yellow-300 mt-4">GOOD TRY, ASTRO!</h2>
+                <p class="text-xl font-bold text-cyan-300 mt-2">LET'S SEE WHAT YOU FOUND!</p>
+                <p id="timeout-stats" class="text-slate-300 text-md mt-2 font-medium">You found 0 out of 4 items.</p>
+                
+                <div class="my-6 flex justify-center gap-4" id="timeout-found-list">
+                    <!-- Populated via JS -->
+                </div>
+
+                <button onclick="restartGame()" class="title-font bg-yellow-400 hover:bg-yellow-300 text-slate-950 text-2xl px-8 py-3 rounded-2xl shadow-lg transition transform hover:scale-105 cursor-pointer">
+                    🔄 TRY AGAIN / נסה שוב
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let gameState = 'INTRO'; // INTRO, PLAYING, SUCCESS, TIMEOUT
+        let timeLeft = 180; // 3 minutes
+        let timerInterval = null;
+        let foundItems = [false, false, false, false];
+        const vocabularyWords = ['friend', 'name', 'hello', 'like'];
+
+        function speakWord(word) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.pitch = 1.2;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function speakIntro() {
+            speakWord("Hi Earth! I am Astro! Let's find some things!");
+        }
+
+        function previewWord(word) {
+            speakWord(word);
+        }
+
+        function startGame() {
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            gameState = 'PLAYING';
+            foundItems = [false, false, false, false];
+            
+            for(let i=0; i<4; i++) {
+                document.getElementById(`badge-${i}`).classList.add('hidden');
+                document.getElementById(`status-${i}`).innerText = "Hidden 🔍";
+                document.getElementById(`status-${i}`).className = "text-[10px] text-slate-400";
+                document.getElementById(`target-${i}`).style.pointerEvents = 'auto';
+                document.getElementById(`target-${i}`).classList.add('pulse-target');
+            }
+
+            timeLeft = 180;
+            updateTimerDisplay();
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if(gameState !== 'PLAYING') return;
+                timeLeft--;
+                updateTimerDisplay();
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    triggerTimeout();
+                }
+            }, 1000);
+
+            speakWord("Let's find them!");
+        }
+
+        function updateTimerDisplay() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById('timer-display').innerText = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function handleMouseMove(e) {
+            if(gameState !== 'PLAYING') return;
+            const playground = document.getElementById('playground');
+            const rect = playground.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const cursor = document.getElementById('astro-cursor');
+            cursor.style.left = `${x}px`;
+            cursor.style.top = `${y}px`;
+
+            checkProximity(x, y, rect);
+        }
+
+        function handleTouchMove(e) {
+            if(gameState !== 'PLAYING') return;
+            if(e.touches && e.touches.length > 0) {
+                const playground = document.getElementById('playground');
+                const rect = playground.getBoundingClientRect();
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+
+                const cursor = document.getElementById('astro-cursor');
+                cursor.style.left = `${x}px`;
+                cursor.style.top = `${y}px`;
+
+                checkProximity(x, y, rect);
+            }
+        }
+
+        function checkProximity(mouseX, mouseY, rect) {
+            for(let i=0; i<4; i++) {
+                if(foundItems[i]) continue;
+                const targetEl = document.getElementById(`target-${i}`);
+                const tRect = targetEl.getBoundingClientRect();
+                
+                const tX = (tRect.left + tRect.width / 2) - rect.left;
+                const tY = (tRect.top + tRect.height / 2) - rect.top;
+
+                const distance = Math.hypot(mouseX - tX, mouseY - tY);
+                if(distance < 90) {
+                    foundTarget(i);
+                }
+            }
+        }
+
+        function foundTarget(index) {
+            if(foundItems[index] || gameState !== 'PLAYING') return;
+            foundItems[index] = true;
+
+            document.getElementById(`badge-${index}`).classList.remove('hidden');
+            document.getElementById(`status-${index}`).innerText = "Found! ✓";
+            document.getElementById(`status-${index}`).className = "text-[10px] text-emerald-400 font-bold";
+            document.getElementById(`target-${index}`).style.pointerEvents = 'none';
+            document.getElementById(`target-${index}`).classList.remove('pulse-target');
+
+            speakWord(vocabularyWords[index]);
+
+            if(foundItems.every(val => val === true)) {
+                clearInterval(timerInterval);
+                setTimeout(triggerSuccess, 1000);
+            }
+        }
+
+        function triggerSuccess() {
+            gameState = 'SUCCESS';
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('success-screen').classList.remove('hidden');
+            speakWord("Mission complete! Great job!");
+        }
+
+        function triggerTimeout() {
+            gameState = 'TIMEOUT';
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('timeout-screen').classList.remove('hidden');
+            
+            let foundCount = foundItems.filter(Boolean).length;
+            document.getElementById('timeout-stats').innerText = `You found ${foundCount} out of 4 items! טוב מאוד!`;
+            
+            let listContainer = document.getElementById('timeout-found-list');
+            listContainer.innerHTML = '';
+            for(let i=0; i<4; i++) {
+                let badgeClass = foundItems[i] ? 'border-emerald-500 bg-emerald-950/40 text-emerald-300' : 'border-slate-700 bg-slate-900/40 text-slate-500 opacity-50';
+                listContainer.innerHTML += `
+                    <div class="p-2 rounded-xl border-2 ${badgeClass} flex flex-col items-center">
+                        <span class="text-xs font-bold uppercase">${vocabularyWords[i]}</span>
+                        <span class="text-lg">${foundItems[i] ? '✅' : '❌'}</span>
+                    </div>
+                `;
+            }
+            speakWord("Good try! Let's try again!");
+        }
+
+        function restartGame() {
+            document.getElementById('success-screen').classList.add('hidden');
+            document.getElementById('timeout-screen').classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>
