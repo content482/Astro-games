@@ -105,14 +105,14 @@
                 </div>
             </div>
 
-            <div id="screen-game" class="absolute inset-0 z-20 flex flex-col justify-end p-3 md:p-6 pointer-events-none hidden overflow-y-auto">
+            <div id="screen-game" class="absolute inset-0 z-20 flex flex-col justify-between p-3 md:p-6 pointer-events-none hidden overflow-y-auto">
                 
                 <!-- Feedback / Message Banner -->
                 <div id="feedback-banner" class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 bg-amber-400 text-slate-950 font-bold px-5 py-2 rounded-2xl shadow-2xl text-lg title-font border-2 border-white animate-bounce z-40 pointer-events-auto">
                 </div>
 
-                <!-- Dialogue & Question Card - Scrollable and Flex-safe -->
-                <div class="pointer-events-auto bg-slate-900/98 backdrop-md border-4 border-indigo-500 p-4 md:p-6 rounded-3xl shadow-2xl max-w-4xl w-full mx-auto flex flex-col gap-3 animate-pop-in my-auto">
+                <!-- TOP-ALIGNED QUESTION CONTAINER (Keeps background fully visible below) -->
+                <div class="pointer-events-auto bg-slate-900/95 backdrop-md border-4 border-indigo-500 p-4 md:p-5 rounded-3xl shadow-2xl max-w-3xl w-full mx-auto flex flex-col gap-2 animate-pop-in mt-1 z-30">
                     
                     <!-- Clue and Question Header -->
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-indigo-800 pb-2">
@@ -135,8 +135,8 @@
                     </div>
 
                     <!-- Next Clue / Advance Button -->
-                    <div id="next-action-container" class="hidden flex justify-end pt-2 border-t border-indigo-800">
-                        <button id="next-btn" onclick="advanceGame()" class="title-font bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-lg px-6 py-2.5 rounded-2xl shadow-lg transition transform hover:scale-105 cursor-pointer flex items-center gap-2">
+                    <div id="next-action-container" class="hidden flex justify-end pt-1 border-t border-indigo-800">
+                        <button id="next-btn" onclick="advanceGame()" class="title-font bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-base px-5 py-2 rounded-2xl shadow-lg transition transform hover:scale-105 cursor-pointer flex items-center gap-2">
                             <span>NEXT CLUE ➔</span>
                         </button>
                     </div>
@@ -144,7 +144,7 @@
                 </div>
             </div>
 
-            <div id="screen-success" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 bg-gradient-to-b from-indigo-950/98 via-purple-950/98 to-slate-950/98 backdrop-blur-md hidden text-center overflow-y-auto">
+            <div id="screen-success" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-4 bg-gradient-to-b from-indigo-950/90 via-purple-950/90 to-slate-950/90 backdrop-blur-sm hidden text-center overflow-y-auto">
                 <div class="bg-slate-900/95 p-6 md:p-8 rounded-3xl border-4 border-emerald-400 max-w-xl w-full shadow-2xl animate-pop-in my-auto">
                     <span class="text-5xl animate-bounce">🎉🎂🥳</span>
                     <h2 class="title-font text-3xl md:text-4xl text-yellow-300 mt-2">SURPRISE!</h2>
@@ -172,27 +172,27 @@
                 </div>
             </div>
 
-            <!-- FULL PARTY FINAL SCENE SCREEN -->
-            <div id="screen-full-party" class="absolute inset-0 z-30 flex flex-col justify-end p-4 md:p-6 hidden text-center overflow-y-auto">
-                <div class="bg-slate-900/95 backdrop-md border-4 border-yellow-400 p-5 rounded-3xl shadow-2xl max-w-lg w-full mx-auto flex flex-col items-center gap-3 animate-pop-in my-auto">
-                    <span class="text-4xl animate-bounce">🎈🎁🎂🥳🎉</span>
-                    <h2 class="title-font text-2xl md:text-3xl text-yellow-300">THE FULL PARTY CELEBRATION!</h2>
-                    <p class="text-slate-200 text-sm font-medium" dir="rtl">מסיבת יום הולדת מושלמת עם כל החברים!</p>
-                    <div class="bg-indigo-950 p-3 rounded-2xl border border-indigo-600 w-full grid grid-cols-3 gap-2 text-center">
+            <!-- FULL PARTY FINAL SCENE SCREEN (Clean Bottom Floating Card so Background Party is Fully Visible) -->
+            <div id="screen-full-party" class="absolute inset-0 z-30 flex flex-col justify-end p-4 md:p-6 hidden text-center overflow-y-auto pointer-events-none">
+                <div class="pointer-events-auto bg-slate-900/90 backdrop-md border-4 border-yellow-400 p-4 md:p-5 rounded-3xl shadow-2xl max-w-md w-full mx-auto flex flex-col items-center gap-2 animate-pop-in mb-2">
+                    <span class="text-3xl animate-bounce">🎈🎁🎂🥳🎉</span>
+                    <h2 class="title-font text-xl md:text-2xl text-yellow-300">THE FULL PARTY CELEBRATION!</h2>
+                    <p class="text-slate-200 text-xs font-medium" dir="rtl">מסיבת יום הולדת מושלמת עם כל החברים!</p>
+                    <div class="bg-indigo-950 p-2 rounded-2xl border border-indigo-600 w-full grid grid-cols-3 gap-2 text-center">
                         <div class="flex flex-col items-center">
-                            <span class="text-xs text-cyan-300 font-bold">🏫 Classroom</span>
-                            <span class="text-lg">✨ Ready</span>
+                            <span class="text-[10px] text-cyan-300 font-bold">🏫 Classroom</span>
+                            <span class="text-sm">✨ Ready</span>
                         </div>
                         <div class="flex flex-col items-center">
-                            <span class="text-xs text-cyan-300 font-bold">🎂 Cake</span>
-                            <span class="text-lg">🍰 8 Years</span>
+                            <span class="text-[10px] text-cyan-300 font-bold">🎂 Cake</span>
+                            <span class="text-sm">🍰 8 Years</span>
                         </div>
                         <div class="flex flex-col items-center">
-                            <span class="text-xs text-cyan-300 font-bold">👽 Astro</span>
-                            <span class="text-lg">🎉 Excited</span>
+                            <span class="text-[10px] text-cyan-300 font-bold">👽 Astro</span>
+                            <span class="text-sm">🎉 Excited</span>
                         </div>
                     </div>
-                    <button onclick="goToGoodbyeScreen()" class="title-font bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xl px-8 py-3 rounded-2xl shadow-lg transition transform hover:scale-105 cursor-pointer w-full mt-2">
+                    <button onclick="goToGoodbyeScreen()" class="title-font bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-lg px-6 py-2.5 rounded-2xl shadow-lg transition transform hover:scale-105 cursor-pointer w-full mt-1">
                         CONTINUE / המשך ➔
                     </button>
                 </div>
@@ -430,6 +430,17 @@
         function goToFullPartyScene() {
             document.getElementById('screen-success').classList.add('hidden');
             document.getElementById('screen-full-party').classList.remove('hidden');
+            
+            // Ensure full party background and props are fully active and visible
+            document.getElementById('bg-img').src = './images/Birthday classroom.jpg';
+            const cakeProp = document.getElementById('prop-cake');
+            cakeProp.style.opacity = '1';
+            cakeProp.style.transform = 'translate(-50%, 0) scale(1)';
+            
+            const astroProp = document.getElementById('prop-astro');
+            astroProp.style.opacity = '1';
+            astroProp.style.transform = 'scale(1)';
+
             speakText("Here is the full birthday party! Everything is ready!");
         }
 
