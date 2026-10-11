@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Space Quest: Astro and Alex</title>
+<style>
+  body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;color:#fff;text-align:center;
+       background:radial-gradient(circle at top,#2b1f6b,#0a0a23);min-height:100vh}
+  #hud{display:flex;justify-content:space-around;padding:10px;background:#0006;font-size:24px}
+  #game{max-width:780px;margin:auto;padding:12px}
+  h1{margin:6px;font-size:40px}
+  .chars{display:flex;justify-content:center;gap:24px;align-items:flex-end;margin:6px}
+  .char{font-size:70px;height:100px}
+  .char img{height:100px}
+  .bubble{background:#fff;color:#222;border-radius:18px;padding:12px 18px;font-size:34px;margin:10px auto;max-width:600px;font-weight:bold}
+  .big{font-size:110px;line-height:1.1;display:flex;justify-content:center;align-items:center;gap:10px}
+  .big img{height:130px}
+  .row{display:flex;justify-content:center;align-items:center;flex-wrap:wrap}
+  .opt{display:flex;align-items:center;margin:8px}
+  button{font-size:32px;padding:14px 24px;border:none;border-radius:16px;cursor:pointer;
+         background:#ffd23f;color:#222;font-weight:bold;box-shadow:0 5px #b8941a;font-family:inherit}
+  button:active{transform:translateY(4px);box-shadow:0 1px #b8941a}
+  button.spk{background:#5ac8fa;box-shadow:0 5px #2a86b0;padding:14px 16px;margin-right:6px;font-size:28px}
+  button.pic{font-size:80px;background:#fff;box-shadow:0 5px #aaa;margin:8px}
+  button.good{background:#4cd964!important;box-shadow:0 5px #2b9a3e!important}
+  button.bad{background:#ff5a5f!important;animation:shake .4s}
+  @keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+  .dots{font-size:24px;margin:6px}
+</style>
+</head>
+<body>
+<div id="hud">
+  <span>⭐ Stars: <b id="stars_">0</b></span>
+  <span>✨ XP: <b id="xp_">0</b></span>
+</div>
+<div id="game"></div>
+
+<script>
+// ---------- DATA ----------
+const VOCAB = {
+  tall:"🦒", short:"🐭", strong:"💪", quiet:"🤫", loud:"📢",
+  funny:"🤡", brave:"🦸", kind:"💖", happy:"😀", angry:"😠"
+};
+const WORDS = Object.keys(VOCAB);
+const GOOD = ["kind","funny","brave","happy"];   // "I like ___ friends"
+const NOTGOOD = ["angry","loud"];                 // the not-so-nice choices
+const PER_LEVEL = 6;
+
+// Where the pictures live (index.html in the repo root, next to the images folder)
+const IMG = "images/";
+// If you open the file from your computer instead, use this line:
+// const IMG = "https://raw.githubusercontent.com/content482/Astro-games/main/images/";
+
+// ---------- HELPERS ----------
+let xp=0, stars=0, level=0, qi=0, locked=false, items=[];
+const G = document.getElementById("game");
+const shuffle = a => a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]);
+const pick = (arr,n) => shuffle(arr).slice(0,n);
+
+function say(t){ try{ const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; u.rate=.8;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(e){} }
+function hud(){ stars_.textContent=stars; xp_.textContent=xp; }
+function beep(ok){
+  try{ const c=new (window.AudioContext||window.webkitAudioContext)(), o=c.createOscillator(), g=c.createGain();
+    o.connect(g); g.connect(c.destination); o.frequency.value=ok?660:180; g.gain.value=.1;
+    o.start(); o.stop(c.currentTime+.2);}catch(e){}
+}
+// Pictures: astro.png, alex_friend.png, girl.png (emoji shows if a file is missing)
+function charImg(src, emoji, name){
+  return `<div class="char"><img src="${src}" alt="${name}" onerror="this.outerHTML='${emoji}'"></div>`;
+}
+const chars = () => `<div class="chars">${charImg(IMG+"astro.png","👽","Astro")}${charImg(IMG+"alex_friend.png","👦","Alex")}${charImg(IMG+"girl.png","👧","Girl")}</div>`;
+
+const faceImg = who => who==="he"
+  ? `<img src="${IMG}alex_friend.png" alt="Alex" onerror="this.outerHTML='👦'">`
+  : `<img src="${IMG}girl.png" alt="Girl" onerror="this.outerHTML='👧'">`;
+
+const dots = () => `<div class="dots">${"●".repeat(qi)}${"○".repeat(PER_LEVEL-qi)}</div>`;
+
+// Right = go on. Wrong = shake and try again.
+function answer(btn, ok){
+  if(locked) return;
+  beep(ok);
+  if(ok){
+    locked=true; btn.classList.add("good"); xp++; hud();
+    setTimeout(()=>{ qi++; next(); }, 900);
+  } else {
+    btn.classList.add("bad");
+    setTimeout(()=>btn.classList.remove("bad"), 500);
+  }
+}
+function wordOption(box, word, ok){
+  const d=document.createElement("div"); d.className="opt";
+  const s=document.createElement("button"); s.className="spk"; s.textContent="🔊"; s.onclick=()=>say(word);
+  const b=document.createElement("button"); b.textContent=word;
+  b.onclick=()=>{ say(word); answer(b, ok); };
+  d.append(s,b); box.appendChild(d);
+}
+
+// ---------- SCREENS ----------
+function title(){
+  xp=0; stars=0; level=0; qi=0; hud();
+  G.innerHTML = `<h1>🚀 Space Quest</h1>${chars()}
+    <div class="bubble">Let's go on a space adventure!<br>Win 4 stars to launch the rocket. ⭐⭐⭐⭐</div>
+    <button onclick="startLevel(1)">▶ Start</button>`;
+  say("Let's go on a space adventure!");
+}
+
+function startLevel(n){
+  level=n; qi=0; locked=false;
+  const info={
+    1:["Level 1: Look 👀","Look at the picture. Pick the word."],
+    2:["Level 2: Listen 👂","Listen. Pick the picture."],
+    3:["Level 3: He is / She is","Look. Pick the word."],
+    4:["Level 4: I like ❤️","Pick the good word!"]
+  }[n];
+  if(n===1 || n===2) items = pick(WORDS, PER_LEVEL);
+  if(n===3) items = pick(WORDS, PER_LEVEL).map(w=>[Math.random()<.5?"he":"she", w]);
+  if(n===4) items = pick(GOOD, PER_LEVEL).map(w=>[w, pick(NOTGOOD,1)[0]]);
+  G.innerHTML = `<h1>${info[0]}</h1>${chars()}<div class="bubble">${info[1]}</div>
+    <button onclick="next()">Go! ✨</button>`;
+  say(info[1]);
+}
+
+function next(){
+  locked=false;
+  if(qi>=PER_LEVEL) return endLevel();
+  [null,L1,L2,L3,L4][level]();
+}
+
+// Level 1: see picture -> pick word
+function L1(){
+  const w=items[qi], opts=shuffle([w,...pick(WORDS.filter(x=>x!==w),2)]);
+  G.innerHTML = `${dots()}<div class="big">${VOCAB[w]}</div>
+    <div class="bubble">Which word?</div><div class="row" id="opts"></div>`;
+  const box=document.getElementById("opts");
+  opts.forEach(o=>wordOption(box,o,o===w));
+}
+
+// Level 2: hear word -> pick picture
+function L2(){
+  const w=items[qi], opts=shuffle([w,...pick(WORDS.filter(x=>x!==w),2)]);
+  G.innerHTML = `${dots()}<button class="spk" style="font-size:70px;padding:20px 34px" onclick="say('${w}')">🔊</button>
+    <div class="bubble">Listen!</div><div class="row" id="opts"></div>`;
+  const box=document.getElementById("opts");
+  opts.forEach(o=>{
+    const b=document.createElement("button"); b.className="pic"; b.textContent=VOCAB[o];
+    b.onclick=()=>answer(b,o===w); box.appendChild(b);
+  });
+  setTimeout(()=>say(w),400);
+}
+
+// Level 3: He is ___ / She is ___
+function L3(){
+  const [who,w]=items[qi], opts=shuffle([w,...pick(WORDS.filter(x=>x!==w),1)]);
+  const sentence = who==="he" ? "He is" : "She is";
+  G.innerHTML = `${dots()}<div class="big">${faceImg(who)} ${VOCAB[w]}</div>
+    <div class="bubble">${sentence} ___</div><div class="row" id="opts"></div>`;
+  const box=document.getElementById("opts");
+  opts.forEach(o=>wordOption(box,o,o===w));
+  setTimeout(()=>say(sentence),300);
+}
+
+// Level 4: I like ___ friends (one nice word, one not so nice)
+function L4(){
+  const [good,bad]=items[qi], opts=shuffle([good,bad]);
+  G.innerHTML = `${dots()}<div class="big">👦 🤝 👽</div>
+    <div class="bubble">I like ___ friends</div><div class="row" id="opts"></div>`;
+  const box=document.getElementById("opts");
+  opts.forEach(o=>{
+    const d=document.createElement("div"); d.className="opt";
+    const s=document.createElement("button"); s.className="spk"; s.textContent="🔊"; s.onclick=()=>say(o);
+    const b=document.createElement("button"); b.textContent=VOCAB[o]+" "+o;
+    b.onclick=()=>{ say("I like "+o+" friends"); answer(b,o===good); };
+    d.append(s,b); box.appendChild(d);
+  });
+  setTimeout(()=>say("I like blank friends"),300);
+}
+
+function endLevel(){
+  stars++; hud();
+  if(level<4){
+    G.innerHTML = `<h1>⭐ Great job!</h1>${chars()}
+      <div class="bubble">Level ${level} clear!</div>
+      <button onclick="startLevel(${level+1})">Next ➡️</button>`;
+    say("Great job!");
+  } else {
+    G.innerHTML = `<h1>🎉 🚀 3, 2, 1... GO! 🚀 🎉</h1>${chars()}
+      <div class="bubble">The rocket is flying!<br>Great job!</div>
+      <p style="font-size:30px">✨ ${xp} XP &nbsp; ⭐ ${stars} stars</p>
+      <button onclick="title()">Play again 🔁</button>`;
+    say("The rocket is flying! Great job!");
+  }
+}
+
+title();
+</script>
+</body>
+</html>
