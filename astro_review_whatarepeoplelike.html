@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circus Fun: Astro and Alex</title>
+<style>
+  body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;color:#fff;text-align:center;
+       background:
+         radial-gradient(circle at top, #fffbe6 0%, #ffd23f 18%, transparent 19%),
+         linear-gradient(180deg,#c41e3a 0%,#a01830 40%,#2b0a12 100%);
+       min-height:100vh}
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:22px;
+    background:repeating-linear-gradient(90deg,#fff 0 30px,#c41e3a 30px 60px);z-index:10}
+  #hud{display:flex;justify-content:space-around;padding:16px 10px 10px;background:#0007;font-size:24px;margin-top:22px}
+  #game{max-width:780px;margin:auto;padding:12px}
+  h1{margin:8px;font-size:42px;text-shadow:0 3px 0 #000}
+ .chars{display:flex;justify-content:center;gap:18px;align-items:flex-end;margin:8px;background:#fff2;border-radius:24px;padding:10px 12px}
+ .char{height:110px}.char img{height:110px;filter:drop-shadow(0 4px 6px #0008)}
+ .bubble{background:#fff;color:#222;border-radius:18px;padding:12px 18px;font-size:32px;margin:12px auto;max-width:600px;font-weight:bold;border:4px solid #ffd23f}
+ .big{font-size:110px;display:flex;justify-content:center;align-items:center;gap:10px}
+ .big img{height:130px}
+ .row{display:flex;justify-content:center;flex-wrap:wrap}
+ .opt{display:flex;align-items:center;margin:8px}
+  button{font-size:32px;padding:14px 24px;border:none;border-radius:16px;cursor:pointer;background:#ffd23f;color:#222;font-weight:bold;box-shadow:0 5px #b8941a}
+  button.spk{background:#5ac8fa;box-shadow:0 5px #2a86b0;padding:14px 16px;margin-right:6px;font-size:28px}
+  button.pic{font-size:80px;background:#fff;box-shadow:0 5px #aaa;margin:8px}
+  button.good{background:#4cd964!important} button.bad{background:#ff5a5f!important;animation:shake.4s}
+  @keyframes shake{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+ .dots{font-size:24px;color:#ffd23f;letter-spacing:4px}
+</style>
+</head>
+<body>
+<div id="hud"><span>⭐ Stars: <b id="stars_">0</b></span><span>✨ XP: <b id="xp_">0</b></span></div>
+<div id="game"></div>
+<script>
+const VOCAB={tall:"🦒",short:"🐭",strong:"💪",quiet:"🤫",loud:"📢",funny:"🤡",brave:"🦸",kind:"💖",happy:"😀",angry:"😠"};
+const WORDS=Object.keys(VOCAB); const GOOD=["kind","funny","brave","happy"]; const NOTGOOD=["angry","loud"]; const PER_LEVEL=6;
+const IMG="images/"; let xp=0,stars=0,level=0,qi=0,locked=false,items=[]; const G=document.getElementById("game");
+const shuffle=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]); const pick=(arr,n)=>shuffle(arr).slice(0,n);
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.8;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+function hud(){stars_.textContent=stars;xp_.textContent=xp;}
+function beep(ok){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=ok?660:180;g.gain.value=.1;o.start();o.stop(c.currentTime+.2);}catch(e){}}
+function charImg(src,alt){return `<div class="char"><img src="${src}" alt="${alt}"></div>`;}
+const chars=()=>`<div class="chars">${charImg(IMG+"astro.png","Astro")}${charImg(IMG+"alex_friend.png","Alex")}${charImg(IMG+"girl.png","Girl")}</div>`;
+const faceImg=who=>who==="he"?`<img src="${IMG}alex_friend.png" style="height:130px">`:`<img src="${IMG}girl.png" style="height:130px">`;
+const dots=()=>`<div class="dots">${"●".repeat(qi)}${"○".repeat(PER_LEVEL-qi)}</div>`;
+function answer(btn,ok){if(locked)return;beep(ok);if(ok){locked=true;btn.classList.add("good");xp++;hud();setTimeout(()=>{qi++;next();},900);}else{btn.classList.add("bad");setTimeout(()=>btn.classList.remove("bad"),500);}}
+function wordOption(box,word,ok){const d=document.createElement("div");d.className="opt";const s=document.createElement("button");s.className="spk";s.textContent="🔊";s.onclick=()=>say(word);const b=document.createElement("button");b.textContent=word;b.onclick=()=>{say(word);answer(b,ok);};d.append(s,b);box.appendChild(d);}
+function title(){xp=0;stars=0;level=0;qi=0;hud();G.innerHTML=`<h1>🎪 Circus Fun!</h1>${chars()}
