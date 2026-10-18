@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Astro's First Earth Morning</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#13204a;touch-action:none;user-select:none;-webkit-user-select:none}
+body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Trebuchet MS",system-ui,sans-serif;color:#1e2a5a}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center center;overflow:hidden;background:#bfe6ff;border-radius:6px}
+#stage img{-webkit-user-drag:none;user-select:none;pointer-events:none}
+.layer{position:absolute;inset:0}
+.overlay{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:rgba(19,32,74,.62);text-align:center;padding:40px}
+.overlay.hidden{display:none}
+.ovcard{background:#fff;border-radius:44px;padding:48px 70px;box-shadow:0 18px 0 rgba(0,0,0,.18);max-width:1150px;display:flex;flex-direction:column;align-items:center;gap:22px}
+.ovcard h1{margin:0;font-size:84px;line-height:1.05;color:#1e2a5a}
+.ovcard p{margin:0;font-size:40px;line-height:1.3;color:#3b4a7a}
+.bigbtn{font:inherit;font-size:58px;font-weight:800;color:#fff;background:#ff8a1f;border:0;border-radius:999px;padding:22px 80px;box-shadow:0 10px 0 #c95f00;cursor:pointer;letter-spacing:2px}
+.bigbtn:active{transform:translateY(6px);box-shadow:0 4px 0 #c95f00}
+.bigbtn.green{background:#2fbf71;box-shadow:0 10px 0 #1d8a4f}
+.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;border-radius:26px;background:rgba(255,255,255,.88);border:5px dashed #8fa2d6;color:#1e2a5a;font-weight:800;text-align:center;overflow:hidden;line-height:1}
+.ph .e{font-size:1em}
+.ph .w{font-size:.28em;margin-top:.08em;letter-spacing:1px}
+.art{position:absolute;display:flex;align-items:flex-end;justify-content:center}
+.art>img{width:100%;height:100%;object-fit:contain}
+.wobble{animation:wob .5s}
+@keyframes wob{0%,100%{translate:0 0;rotate:0deg}20%{translate:-14px 0;rotate:-4deg}40%{translate:12px 0;rotate:3deg}60%{translate:-8px 0;rotate:-2deg}80%{translate:5px 0;rotate:0deg}}
+.bounce{animation:bnc .45s}
+@keyframes bnc{0%,100%{scale:1}40%{scale:1.18}70%{scale:.95}}
+.bubble{pointer-events:none;position:absolute;background:#fff;border-radius:34px;padding:18px 30px;font-size:42px;font-weight:800;box-shadow:0 8px 0 rgba(0,0,0,.15);z-index:40;white-space:nowrap}
+#confetti{position:absolute;inset:0;pointer-events:none;z-index:120}
+#soundHint{position:absolute;right:18px;top:14px;z-index:90;font-size:34px;background:rgba(255,255,255,.85);border-radius:999px;padding:6px 16px;display:none}
+
+#bg{position:absolute;inset:0;background:#1e2a5a}
+#screen{position:absolute;left:160px;top:30px;width:1280px;height:720px;border-radius:24px;overflow:hidden;background:#000;box-shadow:0 12px 0 rgba(0,0,0,.3)}
+#screen video{width:100%;height:100%;object-fit:cover;display:none}
+#scene{position:absolute;inset:0}
+.room{position:absolute;inset:0}
+.pc{position:absolute;line-height:1}
+.pc .art{left:0;top:0}
+#cap{position:absolute;left:0;right:0;bottom:24px;text-align:center;z-index:5}
+#cap span{background:rgba(0,0,0,.6);color:#fff;font-size:44px;font-weight:900;padding:10px 26px;border-radius:18px}
+#choices{position:absolute;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;justify-content:center;gap:30px;background:rgba(19,32,74,.7)}
+#choices h2{margin:0;color:#fff;font-size:60px}
+#choices .row{display:flex;gap:60px}
+.ch{width:440px;height:330px;border:0;border-radius:30px;background:#fff;box-shadow:0 10px 0 rgba(0,0,0,.25);cursor:pointer;position:relative;overflow:hidden;font-size:170px}
+.ch img{width:100%;height:100%;object-fit:cover}
+.ch:active{transform:translateY(6px)}
+#strip{position:absolute;left:160px;top:770px;width:1280px;height:110px;display:flex;justify-content:center;gap:24px}
+#strip .c{width:200px;height:110px;border-radius:20px;background:rgba(255,255,255,.25);position:relative;overflow:hidden;filter:grayscale(1);opacity:.5;display:flex;align-items:center;justify-content:center;font-size:60px}
+#strip .c .art{left:0;top:0}
+#strip .c.on{filter:none;opacity:1;background:#fff;box-shadow:0 0 0 5px #ffd23f}
+#replay{position:absolute;right:30px;top:40px;width:110px;height:110px;border-radius:50%;border:0;background:#3d8bff;color:#fff;font-size:56px;box-shadow:0 8px 0 #2766c4;cursor:pointer;z-index:20;display:none}
+.big{animation:bigpop .6s}
+@keyframes bigpop{0%{transform:scale(.3)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.shake{animation:wob .5s 2}
+</style></head>
+<body>
+<div id="stage">
+  <div id="bg"></div>
+  <div id="screen"><video id="vid" playsinline></video><div id="scene"></div><div id="cap"></div>
+    <div id="choices"><h2>What does Astro do now?</h2><div class="row"></div></div></div>
+  <div id="strip"></div>
+  <button id="replay" title="Watch again">🔁</button>
+</div>
+<script>
+var AUDIO={};
+var PICS={ astro:'../images/astro.png', pj:'../images/l6/astro_pj.png',
+  card_wake:'../images/l6/card_wake.png', card_shower:'../images/l6/card_shower.png', card_brush:'../images/l6/card_brush.png', card_dressed:'../images/l6/card_dressed.png', card_breakfast:'../images/l6/card_breakfast.png' };
+for(var i=1;i<=5;i++){ PICS['s'+i+'_right']='../images/l6/video/step'+i+'_right.jpg'; PICS['s'+i+'_wrong']='../images/l6/video/step'+i+'_wrong.jpg'; }
+var VIDEO='../images/l6/video/';
+</script>
+<script>
+/* ===== Astro & Alex shared game base ===== */
+var G=(function(){
+  var W=1600,H=900, stage=document.getElementById('stage'), scale=1;
+  var DEBUG=/[?&]debug=1/.test(location.search);
+  function fit(){
+    scale=Math.min(window.innerWidth/W, window.innerHeight/H);
+    stage.style.transform='translate(-50%,-50%) scale('+scale+')';
+  }
+  window.addEventListener('resize',fit); fit();
+  function toStage(e){
+    var r=stage.getBoundingClientRect();
+    return {x:(e.clientX-r.left)/scale, y:(e.clientY-r.top)/scale};
+  }
+  /* ---------- speech: one queue, never overlapping ---------- */
+  var AUDIO=window.AUDIO||{}; var voice=null; var queue=Promise.resolve(); var pending=0;
+  function pickVoice(){
+    if(!('speechSynthesis' in window)) return;
+    var vs=speechSynthesis.getVoices().filter(function(v){return /^en[-_]US/i.test(v.lang);});
+    var pref=['Samantha','Google US English','Microsoft Aria','Microsoft Jenny','Karen','Ava','Allison'];
+    for(var i=0;i<pref.length;i++){ for(var j=0;j<vs.length;j++){ if(vs[j].name.indexOf(pref[i])>=0){voice=vs[j];return;} } }
+    voice=vs[0]||null;
+  }
+  if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+  function speakNow(text){
+    return new Promise(function(res){
+      var done=false; function fin(){ if(!done){done=true; res();} }
+      var safety=setTimeout(fin, 1800+text.length*95);
+      var file=AUDIO[text];
+      if(file){ var a=new Audio(file); a.onended=fin; a.onerror=fin; a.play().catch(fin); return; }
+      if(!('speechSynthesis' in window)){ setTimeout(fin, 500+text.length*55); return; }
+      var u=new SpeechSynthesisUtterance(text.replace(/\.\.\./g,', '));
+      u.lang='en-US'; u.rate=0.9; u.pitch=1.05; if(voice) u.voice=voice;
+      u.onend=function(){clearTimeout(safety); setTimeout(fin,120);}; u.onerror=function(){clearTimeout(safety); fin();};
+      speechSynthesis.speak(u);
+    });
+  }
+  function say(text){ pending++; queue=queue.then(function(){return speakNow(text);}).then(function(){pending--;}); return queue; }
+  function sayIfFree(text){ if(pending>0) return queue; return say(text); }
+  function busy(){ return pending>0; }
+  /* ---------- sound effects ---------- */
+  var ac=null;
+  function audioInit(){ try{ if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); }catch(e){} }
+  function tone(f,d,type,vol,f2,delay){
+    if(!ac) return; var t=ac.currentTime+(delay||0);
+    var o=ac.createOscillator(), g=ac.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||0.2,t+0.015); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+0.05);
+  }
+  function noise(d,vol,freq,delay){
+    if(!ac) return; var t=ac.currentTime+(delay||0), n=Math.floor(ac.sampleRate*d), b=ac.createBuffer(1,n,ac.sampleRate), ch=b.getChannelData(0);
+    for(var i=0;i<n;i++) ch[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/n);
+    var s=ac.createBufferSource(); s.buffer=b; var f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq||800; f.Q.value=0.7;
+    var g=ac.createGain(); g.gain.value=vol||0.3; s.connect(f); f.connect(g); g.connect(ac.destination); s.start(t);
+  }
+  var sfx={
+    pop:function(){tone(520,0.12,'sine',0.25,980);},
+    ding:function(){tone(1046,0.35,'triangle',0.2); tone(1568,0.4,'triangle',0.12,null,0.08);},
+    boing:function(){tone(220,0.35,'square',0.08,520);},
+    soft:function(){tone(300,0.15,'sine',0.12,240);},
+    whoosh:function(){noise(0.9,0.35,600);},
+    cheer:function(){[523,659,784,1046].forEach(function(f,i){tone(f,0.25,'triangle',0.18,null,i*0.09);});},
+    flip:function(){noise(0.12,0.25,2500);},
+    sparkle:function(){[1318,1568,2093].forEach(function(f,i){tone(f,0.18,'sine',0.1,null,i*0.06);});},
+    thump:function(){tone(120,0.2,'sine',0.35,60);},
+    click:function(){tone(900,0.05,'square',0.06);}
+  };
+  /* ---------- pictures with placeholders ---------- */
+  var img={};
+  function loadOne(paths){
+    paths=[].concat(paths);
+    return new Promise(function(res){
+      var i=0; (function next(){
+        if(i>=paths.length) return res(null);
+        var im=new Image(); im.onload=function(){res(im);}; im.onerror=function(){i++; next();}; im.src=paths[i];
+      })();
+    });
+  }
+  function loadPics(P){
+    var keys=Object.keys(P);
+    return Promise.all(keys.map(function(k){return loadOne(P[k]).then(function(im){img[k]=im;});}));
+  }
+  /* art(key,{x,y,w,h,emoji,word,cls,parent,z}) -> absolutely positioned element with the picture or a placeholder */
+  function art(key,o){
+    o=o||{}; var d=document.createElement('div'); d.className='art '+(o.cls||'');
+    if(o.w!=null){d.style.width=o.w+'px';} if(o.h!=null){d.style.height=o.h+'px';}
+    if(o.x!=null) d.style.left=o.x+'px'; if(o.y!=null) d.style.top=o.y+'px'; if(o.z!=null) d.style.zIndex=o.z;
+    var im=img[key];
+    if(im){ var c=document.createElement('img'); c.src=im.src; c.alt=''; d.appendChild(c); d.dataset.real='1'; }
+    else{ var p=document.createElement('div'); p.className='ph'; p.style.fontSize=Math.round(Math.min(o.w||160,o.h||160)*0.62)+'px';
+      p.innerHTML='<div class="e">'+(o.emoji||'🖼️')+'</div>'+(o.word?'<div class="w">'+o.word+'</div>':''); d.appendChild(p); }
+    (o.parent||stage).appendChild(d); return d;
+  }
+  function has(key){ return !!img[key]; }
+  /* ---------- helpers ---------- */
+  function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+  function shuffle(a){a=a.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t;} return a;}
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function el(tag,cls,parent,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; (parent||stage).appendChild(e); return e;}
+  function anim(e,cls){ e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); setTimeout(function(){e.classList.remove(cls);},600); }
+  /* ---------- confetti ---------- */
+  var cv=el('canvas',''); cv.id='confetti'; cv.width=W; cv.height=H; var cx=cv.getContext('2d'), parts=[], running=false;
+  function confetti(n){
+    var cols=['#ff8a1f','#2fbf71','#3d8bff','#ffd23f','#ff5d8f','#9b5de5'];
+    for(var i=0;i<(n||160);i++) parts.push({x:rand(0,W),y:rand(-300,-20),vx:rand(-2,2),vy:rand(3,8),r:rand(0,6.3),vr:rand(-.2,.2),s:rand(10,20),c:cols[i%cols.length]});
+    if(!running){running=true; requestAnimationFrame(step);}
+  }
+  function step(){
+    cx.clearRect(0,0,W,H);
+    parts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.r+=p.vr; cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle=p.c; cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); cx.restore();});
+    parts=parts.filter(function(p){return p.y<H+40;});
+    if(parts.length) requestAnimationFrame(step); else {running=false; cx.clearRect(0,0,W,H);}
+  }
+  /* ---------- start / end screens ---------- */
+  function overlay(title,text,btn,cls){
+    var o=el('div','overlay'); var c=el('div','ovcard',o);
+    el('h1','',c,title); if(text) el('p','',c,text);
+    var b=el('button','bigbtn '+(cls||''),c,btn); return {o:o,b:b,c:c};
+  }
+  function boot(opt){
+    var s=overlay(opt.title,opt.instruction,'START');
+    s.b.disabled=true; s.b.style.opacity=.5;
+    loadPics(opt.pics||{}).then(function(){ s.b.disabled=false; s.b.style.opacity=1; if(opt.ready) opt.ready(); });
+    s.b.addEventListener('click',function(){
+      audioInit(); if('speechSynthesis' in window){ try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u);}catch(e){} }
+      sfx.click(); s.o.classList.add('hidden'); opt.start();
+    });
+    G.end=function(title,text){
+      sfx.cheer(); confetti(220);
+      var e=overlay(title||'Well done!',text||'','PLAY AGAIN','green');
+      e.o.style.background='rgba(19,32,74,.35)';
+      e.b.addEventListener('click',function(){ sfx.click(); e.o.remove(); opt.start(); });
+    };
+  }
+  return {W:W,H:H,stage:stage,DEBUG:DEBUG,toStage:toStage,say:say,sayIfFree:sayIfFree,busy:busy,sfx:sfx,img:img,art:art,has:has,
+    wait:wait,shuffle:shuffle,rand:rand,el:el,anim:anim,confetti:confetti,boot:boot,audioInit:audioInit,tone:tone,noise:noise,scale:function(){return scale;}};
+})();
+
+</script>
+<script>
+(function(){
+var STEPS=[
+ {k:'wake',card:'⏰',room:'bed',intro:'Ring ring! It is morning. Astro is at Alex\'s house.',right:{e:'🙆',line:'I WAKE UP!'},wrong:{e:'😴',line:'Zzz... Five more minutes!'}},
+ {k:'shower',card:'🚿',room:'bath',intro:'Astro goes to the bathroom.',right:{e:'🚿',line:'I SHOWER!'},wrong:{e:'☀️',line:'Oops! Sunshine does not make me clean!'}},
+ {k:'brush',card:'🪥',room:'bath',intro:'Now Astro is at the sink.',right:{e:'🪥',line:'I BRUSH my TEETH!'},wrong:{e:'🖌️',line:'Oops! That is not a toothbrush!'}},
+ {k:'dressed',card:'👕',room:'bed',intro:'Astro is in front of the wardrobe.',right:{e:'👕',line:'I GET DRESSED!'},wrong:{e:'🤪',line:'Oops! Pants do not go on my head!'}},
+ {k:'breakfast',card:'🥣',room:'kitchen',intro:'Astro and Alex are in the kitchen.',right:{e:'🥣',line:"I eat BREAKFAST! I'm READY!"},wrong:{e:'🧥',line:'Oops! Cereal does not go in my hood!'}}
+];
+var S=G.stage, scene=document.getElementById('scene'), cap=document.getElementById('cap'), vid=document.getElementById('vid'), chEl=document.getElementById('choices');
+var si=0, lastClip=null, busy=true;
+function caption(t){ cap.innerHTML=t?'<span>'+t+'</span>':''; }
+function room(r){
+  scene.innerHTML=''; var d=G.el('div','room',scene);
+  d.style.background={bed:'linear-gradient(#bfe0ff 0 72%,#c9a37a 72%)',bath:'linear-gradient(#d6f3ff 0 72%,repeating-linear-gradient(90deg,#fff 0 60px,#e3eef8 60px 64px) 72%)',kitchen:'linear-gradient(#fff1d6 0 72%,#d9a86c 72%)'}[r];
+  if(r==='bed'){ var b=G.el('div','pc',d,'🛏️'); b.style.cssText+=';left:80px;top:300px;font-size:300px'; var w=G.el('div','pc',d,'🪟'); w.style.cssText+=';left:900px;top:60px;font-size:200px'; }
+  if(r==='bath'){ var s=G.el('div','pc',d,'🛁'); s.style.cssText+=';left:820px;top:330px;font-size:260px'; var m=G.el('div','pc',d,'🪞'); m.style.cssText+=';left:120px;top:120px;font-size:180px'; }
+  if(r==='kitchen'){ var t=G.el('div','pc',d); t.style.cssText+=';left:700px;top:430px;width:480px;height:40px;background:#8a5426;border-radius:10px'; var a=G.el('div','pc',d); a.style.cssText+=';left:950px;top:200px;width:200px;height:240px'; G.art('alex',{x:0,y:0,w:200,h:240,emoji:'🧒',parent:a}); }
+  return d;
+}
+function astro(d,key,x){ var a=G.el('div','pc',d); a.style.cssText+=';left:'+(x||480)+'px;top:220px;width:320px;height:460px'; G.art(G.has(key)?key:'astro',{x:0,y:0,w:320,h:460,emoji:'👽',parent:a}); return a; }
+/* play a clip: the video team's file if it exists, otherwise a drawn version */
+function playClip(name,fallback){
+  return new Promise(function(res){
+    var done=false; function fin(){ if(done) return; done=true; vid.onended=null; vid.onerror=null; vid.style.display='none'; res(); }
+    vid.onerror=async function(){ vid.style.display='none'; await fallback(); fin(); };
+    vid.oncanplay=function(){ vid.oncanplay=null; vid.style.display='block'; scene.innerHTML=''; vid.play().catch(async function(){ vid.style.display='none'; await fallback(); fin(); }); };
+    vid.onended=fin;
+    vid.src=VIDEO+name+'.mp4'; vid.load();
+  });
+}
+async function intro(){
+  var st=STEPS[si]; lastClip=intro;
+  await playClip('step'+(si+1)+'_intro', async function(){ var d=room(st.room); astro(d,si===0?'pj':'astro',si===4?420:480); if(si===0){ var al=G.el('div','pc big',d,'⏰'); al.style.cssText+=';left:820px;top:300px;font-size:150px'; G.tone(1200,0.1,'square',0.06); G.tone(1200,0.1,'square',0.06,null,0.2); }
+    caption(st.intro); await G.say(st.intro); caption(''); });
+  ask();
+}
+function ask(){
+  var st=STEPS[si]; var row=chEl.querySelector('.row'); row.innerHTML='';
+  G.shuffle(['right','wrong']).forEach(function(w){ var b=G.el('button','ch',row); var key='s'+(si+1)+'_'+w;
+    if(G.has(key)){ var im=document.createElement('img'); im.src=G.img[key].src; b.appendChild(im); } else b.textContent=st[w].e;
+    b.dataset.w=w; b.onclick=function(){ if(busy) return; choose(w); }; });
+  chEl.style.display='flex'; busy=false; G.say('What does Astro do now?');
+}
+async function choose(w){
+  busy=true; chEl.style.display='none'; var st=STEPS[si]; G.sfx.click();
+  var clip=async function(){ await playClip('step'+(si+1)+'_'+w, async function(){ var d=room(st.room); var a=astro(d,'astro');
+    var e=G.el('div','pc big',d,st[w].e); e.style.cssText+=';left:820px;top:200px;font-size:220px';
+    if(w==='wrong'){ a.classList.add('shake'); G.sfx.boing(); } else { G.sfx.sparkle(); a.animate([{transform:'translateY(0)'},{transform:'translateY(-30px)'},{transform:'translateY(0)'}],{duration:500,iterations:2}); }
+    caption(st[w].line); await G.say(st[w].line); await G.wait(400); caption(''); }); };
+  lastClip=clip; document.getElementById('replay').style.display='block';
+  await clip();
+  if(w==='wrong'){ ask(); return; }
+  var c=document.querySelectorAll('#strip .c')[si]; c.classList.add('on'); G.anim(c,'bounce'); G.sfx.ding();
+  si++; await G.wait(400);
+  if(si<STEPS.length) intro(); else { G.say('Good morning, Earth!'); G.end('Good morning, Earth!','Astro is ready for his first day.'); }
+}
+document.getElementById('replay').onclick=async function(){ if(busy||!lastClip) return; busy=true; chEl.style.display='none'; await lastClip(); if(chEl.querySelector('.row').children.length && si<STEPS.length) { chEl.style.display='flex'; } busy=false; };
+function start(){
+  var s=document.getElementById('strip'); s.innerHTML='';
+  STEPS.forEach(function(st){ var c=G.el('div','c',s); G.art('card_'+st.k,{x:0,y:0,w:200,h:110,emoji:st.card,parent:c}); });
+  document.getElementById('replay').style.display='none'; si=0; intro();
+}
+PICS.alex='../images/alex_friend.png';
+window.__game={state:function(){return {si:si,busy:busy,choices:chEl.style.display==='flex'};}};
+G.boot({title:"Astro's First Earth Morning",instruction:'Watch the cartoon.<br>When it stops, <b>tap</b> what Astro should do next!',pics:PICS,start:start});
+})();
+</script>
+</body></html>
