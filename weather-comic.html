@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>The Weather Machine</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#13204a;touch-action:none;user-select:none;-webkit-user-select:none}
+body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Trebuchet MS",system-ui,sans-serif;color:#1e2a5a}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center center;overflow:hidden;background:#bfe6ff;border-radius:6px}
+#stage img{-webkit-user-drag:none;user-select:none;pointer-events:none}
+.layer{position:absolute;inset:0}
+.overlay{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:rgba(19,32,74,.62);text-align:center;padding:40px}
+.overlay.hidden{display:none}
+.ovcard{background:#fff;border-radius:44px;padding:48px 70px;box-shadow:0 18px 0 rgba(0,0,0,.18);max-width:1150px;display:flex;flex-direction:column;align-items:center;gap:22px}
+.ovcard h1{margin:0;font-size:84px;line-height:1.05;color:#1e2a5a}
+.ovcard p{margin:0;font-size:40px;line-height:1.3;color:#3b4a7a}
+.bigbtn{font:inherit;font-size:58px;font-weight:800;color:#fff;background:#ff8a1f;border:0;border-radius:999px;padding:22px 80px;box-shadow:0 10px 0 #c95f00;cursor:pointer;letter-spacing:2px}
+.bigbtn:active{transform:translateY(6px);box-shadow:0 4px 0 #c95f00}
+.bigbtn.green{background:#2fbf71;box-shadow:0 10px 0 #1d8a4f}
+.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;border-radius:26px;background:rgba(255,255,255,.88);border:5px dashed #8fa2d6;color:#1e2a5a;font-weight:800;text-align:center;overflow:hidden;line-height:1}
+.ph .e{font-size:1em}
+.ph .w{font-size:.28em;margin-top:.08em;letter-spacing:1px}
+.art{position:absolute;display:flex;align-items:flex-end;justify-content:center}
+.art>img{width:100%;height:100%;object-fit:contain}
+.wobble{animation:wob .5s}
+@keyframes wob{0%,100%{translate:0 0;rotate:0deg}20%{translate:-14px 0;rotate:-4deg}40%{translate:12px 0;rotate:3deg}60%{translate:-8px 0;rotate:-2deg}80%{translate:5px 0;rotate:0deg}}
+.bounce{animation:bnc .45s}
+@keyframes bnc{0%,100%{scale:1}40%{scale:1.18}70%{scale:.95}}
+.bubble{pointer-events:none;position:absolute;background:#fff;border-radius:34px;padding:18px 30px;font-size:42px;font-weight:800;box-shadow:0 8px 0 rgba(0,0,0,.15);z-index:40;white-space:nowrap}
+#confetti{position:absolute;inset:0;pointer-events:none;z-index:120}
+#soundHint{position:absolute;right:18px;top:14px;z-index:90;font-size:34px;background:rgba(255,255,255,.85);border-radius:999px;padding:6px 16px;display:none}
+
+#bg{position:absolute;inset:0;background:linear-gradient(135deg,#ffd166,#ff9f6b)}
+#panel{position:absolute;left:180px;top:30px;width:1240px;height:700px;border:12px solid #1e2a5a;border-radius:24px;overflow:hidden;background:#cfeaff;box-shadow:12px 12px 0 rgba(0,0,0,.25)}
+#panel>img{width:100%;height:100%;object-fit:cover}
+#cap{position:absolute;left:180px;top:752px;width:1240px;min-height:120px;background:#fff;border:8px solid #1e2a5a;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:900;text-align:center;padding:10px 30px;box-shadow:8px 8px 0 rgba(0,0,0,.2)}
+.nav{position:absolute;top:300px;width:130px;height:130px;border-radius:50%;border:0;font-size:74px;color:#fff;background:#3d8bff;box-shadow:0 9px 0 #2766c4;cursor:pointer;z-index:30}
+.nav:disabled{opacity:.3}
+#prev{left:25px}#next{right:25px;background:#ff8a1f;box-shadow:0 9px 0 #c95f00}
+#left{position:absolute;left:200px;top:40px;z-index:30;background:#ffd23f;color:#1e2a5a;font-size:34px;font-weight:900;border-radius:999px;padding:4px 22px}
+.nav.pulse{animation:np 1s infinite}
+@keyframes np{50%{transform:scale(1.15)}}
+#num{position:absolute;right:200px;top:40px;z-index:30;background:#1e2a5a;color:#fff;font-size:34px;font-weight:900;border-radius:999px;padding:4px 22px}
+.zone{position:absolute;z-index:20;cursor:pointer;border-radius:22px}
+.zone.dbg{outline:4px dashed red}
+.hintring{position:absolute;border:8px solid #ffd23f;border-radius:50%;z-index:21;pointer-events:none;animation:hr 1.1s infinite}
+@keyframes hr{0%{transform:scale(.8);opacity:1}100%{transform:scale(1.35);opacity:0}}
+.ch{position:absolute}
+.ch .art{left:0;top:0}
+.wr{position:absolute}
+.wr .art{left:0;top:0}
+.wx{position:absolute;inset:0}
+.flake{position:absolute;color:#fff;font-size:30px;animation:fall linear infinite}
+@keyframes fall{from{transform:translateY(-60px)}to{transform:translateY(760px)}}
+.drop{position:absolute;width:4px;height:26px;background:#5aa7ff;border-radius:2px;animation:rain .7s linear infinite}
+@keyframes rain{from{transform:translate(0,-60px)}to{transform:translate(-40px,760px)}}
+.leaf{position:absolute;font-size:34px;animation:blow 1.6s linear infinite}
+@keyframes blow{from{transform:translateX(-80px) rotate(0)}to{transform:translateX(1300px) rotate(540deg)}}
+.machine{position:absolute;width:210px;height:250px;background:linear-gradient(#9aa7c7,#6f7fa8);border:8px solid #4b5a85;border-radius:30px}
+.machine:after{content:'⚡';position:absolute;left:45px;top:40px;width:105px;height:80px;background:#203060;border-radius:14px;font-size:54px;display:flex;align-items:center;justify-content:center}
+.smoke{position:absolute;font-size:80px;opacity:.7}
+.ground{position:absolute;left:0;right:0;bottom:0;height:150px}
+.sweat{position:absolute;font-size:56px}
+</style></head>
+<body>
+<div id="stage">
+  <div id="bg"></div>
+  <div id="panel"></div>
+  <div id="cap"></div>
+  <div id="num"></div>
+  <div id="left"></div>
+  <button class="nav" id="prev">◀</button><button class="nav" id="next">▶</button>
+</div>
+<script>
+var AUDIO={};
+var PICS={ astro:'../images/astro.png', alex:'../images/alex_friend.png', machine:'../images/l3/weather_machine.png', broken:'../images/l3/weather_machine_broken.png',
+  p1:'../images/l3/comic_1.jpg', p2:'../images/l3/comic_2.jpg', p3:'../images/l3/comic_3.jpg', p4:'../images/l3/comic_4.jpg', p5:'../images/l3/comic_5.jpg', p6:'../images/l3/comic_6.jpg',
+  SHIRT:'../images/l3/shirt.png', PANTS:'../images/l3/pants.png', DRESS:'../images/l3/dress.png', JACKET:'../images/l3/jacket.png', HAT:'../images/l3/hat.png',
+  SOCKS:'../images/l3/socks.png', SHOES:'../images/l3/shoes.png', COAT:'../images/l3/coat.png', GLASSES:'../images/l3/glasses.png', SCARF:'../images/l3/scarf.png' };
+/* Tap zones for the designer's comic panels (percent of the panel). Open with ?debug=1 to see and adjust them. */
+var ZONES={
+  1:[{word:'SHIRT',x:62,y:45,w:12,h:18}],
+  2:[{word:'DRESS',x:30,y:40,w:16,h:30},{word:'COAT',x:62,y:38,w:14,h:30}],
+  3:[{word:'COAT',x:30,y:42,w:16,h:30},{word:'SCARF',x:31,y:33,w:12,h:8},{word:'SHIRT',x:62,y:42,w:12,h:18},{word:'GLASSES',x:63,y:24,w:10,h:7}],
+  4:[{word:'GLASSES',x:32,y:26,w:10,h:7},{word:'HAT',x:31,y:12,w:12,h:10},{word:'JACKET',x:62,y:40,w:13,h:22}],
+  5:[{word:'HAT',x:55,y:10,w:10,h:12},{word:'SOCKS',x:75,y:20,w:10,h:12},{word:'SHIRT',x:10,y:15,w:10,h:14},{word:'PANTS',x:22,y:15,w:10,h:16}],
+  6:[{word:'SHOES',x:40,y:70,w:10,h:12},{word:'PANTS',x:50,y:62,w:10,h:16},{word:'JACKET',x:38,y:55,w:12,h:16},{word:'DRESS',x:52,y:48,w:10,h:18},{word:'SOCKS',x:62,y:70,w:9,h:10},{word:'SCARF',x:60,y:56,w:10,h:12}]
+};
+</script>
+<script>
+/* ===== Astro & Alex shared game base ===== */
+var G=(function(){
+  var W=1600,H=900, stage=document.getElementById('stage'), scale=1;
+  var DEBUG=/[?&]debug=1/.test(location.search);
+  function fit(){
+    scale=Math.min(window.innerWidth/W, window.innerHeight/H);
+    stage.style.transform='translate(-50%,-50%) scale('+scale+')';
+  }
+  window.addEventListener('resize',fit); fit();
+  function toStage(e){
+    var r=stage.getBoundingClientRect();
+    return {x:(e.clientX-r.left)/scale, y:(e.clientY-r.top)/scale};
+  }
+  /* ---------- speech: one queue, never overlapping ---------- */
+  var AUDIO=window.AUDIO||{}; var voice=null; var queue=Promise.resolve(); var pending=0;
+  function pickVoice(){
+    if(!('speechSynthesis' in window)) return;
+    var vs=speechSynthesis.getVoices().filter(function(v){return /^en[-_]US/i.test(v.lang);});
+    var pref=['Samantha','Google US English','Microsoft Aria','Microsoft Jenny','Karen','Ava','Allison'];
+    for(var i=0;i<pref.length;i++){ for(var j=0;j<vs.length;j++){ if(vs[j].name.indexOf(pref[i])>=0){voice=vs[j];return;} } }
+    voice=vs[0]||null;
+  }
+  if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+  function speakNow(text){
+    return new Promise(function(res){
+      var done=false; function fin(){ if(!done){done=true; res();} }
+      var safety=setTimeout(fin, 1800+text.length*95);
+      var file=AUDIO[text];
+      if(file){ var a=new Audio(file); a.onended=fin; a.onerror=fin; a.play().catch(fin); return; }
+      if(!('speechSynthesis' in window)){ setTimeout(fin, 500+text.length*55); return; }
+      var u=new SpeechSynthesisUtterance(text.replace(/\.\.\./g,', '));
+      u.lang='en-US'; u.rate=0.9; u.pitch=1.05; if(voice) u.voice=voice;
+      u.onend=function(){clearTimeout(safety); setTimeout(fin,120);}; u.onerror=function(){clearTimeout(safety); fin();};
+      speechSynthesis.speak(u);
+    });
+  }
+  function say(text){ pending++; queue=queue.then(function(){return speakNow(text);}).then(function(){pending--;}); return queue; }
+  function sayIfFree(text){ if(pending>0) return queue; return say(text); }
+  function busy(){ return pending>0; }
+  /* ---------- sound effects ---------- */
+  var ac=null;
+  function audioInit(){ try{ if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); }catch(e){} }
+  function tone(f,d,type,vol,f2,delay){
+    if(!ac) return; var t=ac.currentTime+(delay||0);
+    var o=ac.createOscillator(), g=ac.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||0.2,t+0.015); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+0.05);
+  }
+  function noise(d,vol,freq,delay){
+    if(!ac) return; var t=ac.currentTime+(delay||0), n=Math.floor(ac.sampleRate*d), b=ac.createBuffer(1,n,ac.sampleRate), ch=b.getChannelData(0);
+    for(var i=0;i<n;i++) ch[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/n);
+    var s=ac.createBufferSource(); s.buffer=b; var f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq||800; f.Q.value=0.7;
+    var g=ac.createGain(); g.gain.value=vol||0.3; s.connect(f); f.connect(g); g.connect(ac.destination); s.start(t);
+  }
+  var sfx={
+    pop:function(){tone(520,0.12,'sine',0.25,980);},
+    ding:function(){tone(1046,0.35,'triangle',0.2); tone(1568,0.4,'triangle',0.12,null,0.08);},
+    boing:function(){tone(220,0.35,'square',0.08,520);},
+    soft:function(){tone(300,0.15,'sine',0.12,240);},
+    whoosh:function(){noise(0.9,0.35,600);},
+    cheer:function(){[523,659,784,1046].forEach(function(f,i){tone(f,0.25,'triangle',0.18,null,i*0.09);});},
+    flip:function(){noise(0.12,0.25,2500);},
+    sparkle:function(){[1318,1568,2093].forEach(function(f,i){tone(f,0.18,'sine',0.1,null,i*0.06);});},
+    thump:function(){tone(120,0.2,'sine',0.35,60);},
+    click:function(){tone(900,0.05,'square',0.06);}
+  };
+  /* ---------- pictures with placeholders ---------- */
+  var img={};
+  function loadOne(paths){
+    paths=[].concat(paths);
+    return new Promise(function(res){
+      var i=0; (function next(){
+        if(i>=paths.length) return res(null);
+        var im=new Image(); im.onload=function(){res(im);}; im.onerror=function(){i++; next();}; im.src=paths[i];
+      })();
+    });
+  }
+  function loadPics(P){
+    var keys=Object.keys(P);
+    return Promise.all(keys.map(function(k){return loadOne(P[k]).then(function(im){img[k]=im;});}));
+  }
+  /* art(key,{x,y,w,h,emoji,word,cls,parent,z}) -> absolutely positioned element with the picture or a placeholder */
+  function art(key,o){
+    o=o||{}; var d=document.createElement('div'); d.className='art '+(o.cls||'');
+    if(o.w!=null){d.style.width=o.w+'px';} if(o.h!=null){d.style.height=o.h+'px';}
+    if(o.x!=null) d.style.left=o.x+'px'; if(o.y!=null) d.style.top=o.y+'px'; if(o.z!=null) d.style.zIndex=o.z;
+    var im=img[key];
+    if(im){ var c=document.createElement('img'); c.src=im.src; c.alt=''; d.appendChild(c); d.dataset.real='1'; }
+    else{ var p=document.createElement('div'); p.className='ph'; p.style.fontSize=Math.round(Math.min(o.w||160,o.h||160)*0.62)+'px';
+      p.innerHTML='<div class="e">'+(o.emoji||'🖼️')+'</div>'+(o.word?'<div class="w">'+o.word+'</div>':''); d.appendChild(p); }
+    (o.parent||stage).appendChild(d); return d;
+  }
+  function has(key){ return !!img[key]; }
+  /* ---------- helpers ---------- */
+  function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+  function shuffle(a){a=a.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t;} return a;}
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function el(tag,cls,parent,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; (parent||stage).appendChild(e); return e;}
+  function anim(e,cls){ e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); setTimeout(function(){e.classList.remove(cls);},600); }
+  /* ---------- confetti ---------- */
+  var cv=el('canvas',''); cv.id='confetti'; cv.width=W; cv.height=H; var cx=cv.getContext('2d'), parts=[], running=false;
+  function confetti(n){
+    var cols=['#ff8a1f','#2fbf71','#3d8bff','#ffd23f','#ff5d8f','#9b5de5'];
+    for(var i=0;i<(n||160);i++) parts.push({x:rand(0,W),y:rand(-300,-20),vx:rand(-2,2),vy:rand(3,8),r:rand(0,6.3),vr:rand(-.2,.2),s:rand(10,20),c:cols[i%cols.length]});
+    if(!running){running=true; requestAnimationFrame(step);}
+  }
+  function step(){
+    cx.clearRect(0,0,W,H);
+    parts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.r+=p.vr; cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle=p.c; cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); cx.restore();});
+    parts=parts.filter(function(p){return p.y<H+40;});
+    if(parts.length) requestAnimationFrame(step); else {running=false; cx.clearRect(0,0,W,H);}
+  }
+  /* ---------- start / end screens ---------- */
+  function overlay(title,text,btn,cls){
+    var o=el('div','overlay'); var c=el('div','ovcard',o);
+    el('h1','',c,title); if(text) el('p','',c,text);
+    var b=el('button','bigbtn '+(cls||''),c,btn); return {o:o,b:b,c:c};
+  }
+  function boot(opt){
+    var s=overlay(opt.title,opt.instruction,'START');
+    s.b.disabled=true; s.b.style.opacity=.5;
+    loadPics(opt.pics||{}).then(function(){ s.b.disabled=false; s.b.style.opacity=1; if(opt.ready) opt.ready(); });
+    s.b.addEventListener('click',function(){
+      audioInit(); if('speechSynthesis' in window){ try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u);}catch(e){} }
+      sfx.click(); s.o.classList.add('hidden'); opt.start();
+    });
+    G.end=function(title,text){
+      sfx.cheer(); confetti(220);
+      var e=overlay(title||'Well done!',text||'','PLAY AGAIN','green');
+      e.o.style.background='rgba(19,32,74,.35)';
+      e.b.addEventListener('click',function(){ sfx.click(); e.o.remove(); opt.start(); });
+    };
+  }
+  return {W:W,H:H,stage:stage,DEBUG:DEBUG,toStage:toStage,say:say,sayIfFree:sayIfFree,busy:busy,sfx:sfx,img:img,art:art,has:has,
+    wait:wait,shuffle:shuffle,rand:rand,el:el,anim:anim,confetti:confetti,boot:boot,audioInit:audioInit,tone:tone,noise:noise,scale:function(){return scale;}};
+})();
+
+</script>
+<script>
+(function(){
+var E={SHIRT:'👕',PANTS:'👖',DRESS:'👗',JACKET:'🧥',HAT:'🧢',SOCKS:'🧦',SHOES:'👟',COAT:'🥼',GLASSES:'👓',SCARF:'🧣'};
+var PL={PANTS:1,SOCKS:1,SHOES:1,GLASSES:1};
+var PANELS=[
+ {cap:'Look, Alex! My weather machine!',wx:'sun',machine:'ok'},
+ {cap:'Oh no! SNOW!',wx:'snow',machine:'broken'},
+ {cap:"Now it's hot!",wx:'sun',machine:'broken'},
+ {cap:'RAIN!',wx:'rain',machine:'broken'},
+ {cap:'WIND!',wx:'wind',machine:'broken'},
+ {cap:"Let's get dressed, Alex!",wx:'cloud',machine:'broken'}
+];
+/* code-drawn panels: Astro box (300x420 at 260,240) and Alex box (280x420 at 700,240); worn items as [word,x,y,size] in panel px */
+var WEAR={
+ 1:[['SHIRT',775,390,130]],
+ 2:[['DRESS',330,440,160],['COAT',770,380,150]],
+ 3:[['COAT',335,440,150],['SCARF',355,400,100],['SHIRT',775,390,130],['GLASSES',795,325,90]],
+ 4:[['GLASSES',365,375,90],['HAT',355,275,110],['JACKET',770,385,140]],
+ 5:[['HAT',690,90,110],['SOCKS',930,150,100],['SHIRT',90,110,110],['PANTS',230,110,110]],
+ 6:[['JACKET',470,430,120],['DRESS',600,400,120],['SHOES',490,540,100],['PANTS',620,520,110],['SOCKS',740,540,90],['SCARF',730,450,100]]
+};
+var S=G.stage, panel=document.getElementById('panel'), cap=document.getElementById('cap'), page=0, zonesNow=[];
+function scenery(w){
+  var bgc={sun:'linear-gradient(#5fc4ff,#d6f2ff 60%,#7ccf6a 60%)',snow:'linear-gradient(#cfd8e8,#ffffff 60%,#f4f8ff 60%)',rain:'linear-gradient(#6d7a93,#b7c3d6 60%,#5d9b52 60%)',wind:'linear-gradient(#9fd0ee,#e3f4ff 60%,#7ccf6a 60%)',cloud:'linear-gradient(#a9b8cf,#dfe7f2 60%,#7ccf6a 60%)'}[w];
+  panel.style.background=bgc; var fx=G.el('div','wx',panel);
+  if(w==='snow') for(var i=0;i<30;i++){ var f=G.el('div','flake',fx,'❄'); f.style.left=G.rand(0,100)+'%'; f.style.animationDuration=G.rand(3,6)+'s'; f.style.animationDelay=-G.rand(0,6)+'s'; }
+  if(w==='rain') for(var j=0;j<70;j++){ var d=G.el('div','drop',fx); d.style.left=G.rand(0,110)+'%'; d.style.animationDelay=-G.rand(0,1)+'s'; }
+  if(w==='wind') for(var k=0;k<10;k++){ var l=G.el('div','leaf',fx,'🍃'); l.style.top=G.rand(0,90)+'%'; l.style.animationDelay=-G.rand(0,1.6)+'s'; }
+  if(w==='sun'){ var s=G.el('div','',fx,'☀️'); s.style.cssText='position:absolute;right:40px;top:20px;font-size:150px'; }
+}
+function drawPanel(n){
+  panel.innerHTML=''; panel.style.background=''; zonesNow=[];
+  var p=PANELS[n-1];
+  if(G.has('p'+n)){
+    var im=document.createElement('img'); im.src=G.img['p'+n].src; panel.appendChild(im);
+    ZONES[n].forEach(function(z){ zonesNow.push({w:z.word,x:z.x/100*1216,y:z.y/100*676,ww:z.w/100*1216,hh:z.h/100*676}); });
+  } else {
+    scenery(p.wx);
+    var mk=p.machine==='ok'?'machine':'broken';
+    if(G.has(mk)) G.art(mk,{x:1000,y:330,w:200,h:240,parent:panel}); else { var m=G.el('div','machine',panel); m.style.left='1000px'; m.style.top='330px'; }
+    if(p.machine!=='ok'){ var sm=G.el('div','smoke',panel,'💨'); sm.style.left='1050px'; sm.style.top='240px'; }
+    var a=G.el('div','ch',panel); a.style.cssText='left:260px;top:'+(n===5?260:240)+'px;width:300px;height:420px'; G.art('astro',{x:0,y:0,w:300,h:420,emoji:'👽',parent:a});
+    if(n===5) a.style.transform='rotate(-8deg)';
+    var b=G.el('div','ch',panel); b.style.cssText='left:700px;top:240px;width:280px;height:420px'; G.art('alex',{x:0,y:0,w:280,h:420,emoji:'🧒',parent:b});
+    if(n===6){ a.style.left='120px'; b.style.left='900px'; b.style.width='240px'; }
+    if(n===3){ var sw=G.el('div','sweat',panel,'💦'); sw.style.left='480px'; sw.style.top='230px'; }
+    if(n===2){ var sv=G.el('div','sweat',panel,'🥶'); sv.style.left='480px'; sv.style.top='220px'; }
+    if(n===4){ var sk=G.el('div','sweat',panel,'💧'); sk.style.left='470px'; sk.style.top='250px'; }
+    WEAR[n].forEach(function(it){ var d=G.el('div','wr',panel); d.style.cssText='left:'+it[1]+'px;top:'+it[2]+'px;width:'+it[3]+'px;height:'+it[3]+'px';
+      if(n===5) d.animate([{transform:'rotate(-15deg) translateY(0)'},{transform:'rotate(15deg) translateY(-20px)'}],{duration:900,iterations:Infinity,direction:'alternate'});
+      G.art(it[0],{x:0,y:0,w:it[3],h:it[3],emoji:E[it[0]],parent:d}); zonesNow.push({w:it[0],x:it[1],y:it[2],ww:it[3],hh:it[3],el:d}); });
+  }
+  zonesNow.forEach(function(z,i){ var d=G.el('div','zone'+(G.DEBUG?' dbg':''),panel); d.style.cssText+=';left:'+z.x+'px;top:'+z.y+'px;width:'+z.ww+'px;height:'+z.hh+'px';
+    d.addEventListener('pointerdown',function(e){ e.stopPropagation(); tapItem(z); });
+    var r=G.el('div','hintring',panel); var sz=Math.max(z.ww,z.hh)+40; r.style.cssText+=';left:'+(z.x+z.ww/2-sz/2)+'px;top:'+(z.y+z.hh/2-sz/2)+'px;width:'+sz+'px;height:'+sz+'px'; z.ring=r; });
+  document.getElementById('next').classList.remove('pulse'); updateLeft();
+}
+function updateLeft(){ var left=zonesNow.filter(function(z){return z.ring;}).length; var t=document.getElementById('left');
+  t.textContent=left? ('👆 Tap the clothes: '+left+' left') : '👉 Press ▶'; if(!left) document.getElementById('next').classList.add('pulse'); }
+function tapItem(z){
+  if(z.ring){ z.ring.remove(); z.ring=null; updateLeft(); }
+  var t=PL[z.w]?'These are '+z.w+'.':'This is a '+z.w+'.';
+  if(z.el) G.anim(z.el,'bounce'); G.sfx.pop(); G.sayIfFree(t);
+}
+function go(n){
+  page=n; drawPanel(n); cap.textContent=PANELS[n-1].cap; document.getElementById('num').textContent=n+' / 6';
+  document.getElementById('prev').disabled=(n===1);
+  panel.animate([{opacity:0,transform:'scale(.97)'},{opacity:1,transform:'scale(1)'}],{duration:350});
+  if(n>=2 && n<=5) G.sfx.whoosh();
+  G.say(PANELS[n-1].cap); if(n===1) G.say('Tap the clothes!');
+}
+document.getElementById('next').onclick=function(){ G.sfx.click(); if(page<6) go(page+1); else { G.say("Let's help Astro!"); G.end("Let's help Astro!",'Tap the clothes in every picture to hear them.'); } };
+document.getElementById('prev').onclick=function(){ if(page>1){ G.sfx.click(); go(page-1); } };
+window.__game={state:function(){ var r=panel.getBoundingClientRect(),k=G.scale(); return {page:page,zones:zonesNow.map(function(z){return {w:z.w,cx:r.left+(12+z.x+z.ww/2)*k,cy:r.top+(12+z.y+z.hh/2)*k};})}; }};
+G.boot({title:'The Weather Machine',instruction:'A comic story about Astro\'s weather machine.<br><b>Tap</b> the clothes with the yellow circles to hear them.<br>Then press ▶ for the next picture.',pics:PICS,start:function(){ go(1); }});
+})();
+</script>
+</body></html>
