@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Remember This?</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#13204a;touch-action:none;user-select:none;-webkit-user-select:none}
+body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Trebuchet MS",system-ui,sans-serif;color:#1e2a5a}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center center;overflow:hidden;background:#bfe6ff;border-radius:6px}
+#stage img{-webkit-user-drag:none;user-select:none;pointer-events:none}
+.layer{position:absolute;inset:0}
+.overlay{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;background:rgba(19,32,74,.62);text-align:center;padding:40px}
+.overlay.hidden{display:none}
+.ovcard{background:#fff;border-radius:44px;padding:48px 70px;box-shadow:0 18px 0 rgba(0,0,0,.18);max-width:1150px;display:flex;flex-direction:column;align-items:center;gap:22px}
+.ovcard h1{margin:0;font-size:84px;line-height:1.05;color:#1e2a5a}
+.ovcard p{margin:0;font-size:40px;line-height:1.3;color:#3b4a7a}
+.bigbtn{font:inherit;font-size:58px;font-weight:800;color:#fff;background:#ff8a1f;border:0;border-radius:999px;padding:22px 80px;box-shadow:0 10px 0 #c95f00;cursor:pointer;letter-spacing:2px}
+.bigbtn:active{transform:translateY(6px);box-shadow:0 4px 0 #c95f00}
+.bigbtn.green{background:#2fbf71;box-shadow:0 10px 0 #1d8a4f}
+.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;border-radius:26px;background:rgba(255,255,255,.88);border:5px dashed #8fa2d6;color:#1e2a5a;font-weight:800;text-align:center;overflow:hidden;line-height:1}
+.ph .e{font-size:1em}
+.ph .w{font-size:.28em;margin-top:.08em;letter-spacing:1px}
+.art{position:absolute;display:flex;align-items:flex-end;justify-content:center}
+.art>img{width:100%;height:100%;object-fit:contain}
+.wobble{animation:wob .5s}
+@keyframes wob{0%,100%{translate:0 0;rotate:0deg}20%{translate:-14px 0;rotate:-4deg}40%{translate:12px 0;rotate:3deg}60%{translate:-8px 0;rotate:-2deg}80%{translate:5px 0;rotate:0deg}}
+.bounce{animation:bnc .45s}
+@keyframes bnc{0%,100%{scale:1}40%{scale:1.18}70%{scale:.95}}
+.bubble{pointer-events:none;position:absolute;background:#fff;border-radius:34px;padding:18px 30px;font-size:42px;font-weight:800;box-shadow:0 8px 0 rgba(0,0,0,.15);z-index:40;white-space:nowrap}
+#confetti{position:absolute;inset:0;pointer-events:none;z-index:120}
+#soundHint{position:absolute;right:18px;top:14px;z-index:90;font-size:34px;background:rgba(255,255,255,.85);border-radius:999px;padding:6px 16px;display:none}
+
+#bg{position:absolute;inset:0;background:#c8a27a}
+#bg img{width:100%;height:100%;object-fit:cover}
+.book{position:absolute;left:40px;top:30px;width:1520px;height:850px;background:#7a4a1f;border-radius:30px}
+.book:after{content:'';position:absolute;left:22px;right:22px;top:22px;bottom:22px;background:#fff8ea;border-radius:16px}
+#frameWrap{position:absolute;left:300px;top:70px;width:1000px;height:560px;perspective:2000px;z-index:5}
+#flip{position:absolute;inset:0;transition:transform .7s;transform-style:preserve-3d}
+#flip.hide{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:14px solid #fff;box-shadow:0 10px 0 rgba(0,0,0,.18);border-radius:6px;overflow:hidden}
+.back{transform:rotateY(180deg);background:repeating-linear-gradient(45deg,#ff8a1f 0 30px,#ffa64d 30px 60px);display:flex;align-items:center;justify-content:center;font-size:160px}
+#photo{background:#cfeaff}
+#photo>img{width:100%;height:100%;object-fit:cover}
+.pc{position:absolute;line-height:1}
+.pc .art{left:0;top:0}
+#ring{position:absolute;right:-130px;top:0px;width:110px;height:110px;z-index:8}
+#ring circle{fill:none;stroke-width:12}
+#ring text{font-size:54px;font-weight:900;fill:#1e2a5a}
+.circ{position:absolute;border:9px solid #ff3d6e;border-radius:50%;z-index:6;box-shadow:0 0 0 4px #fff;pointer-events:none}
+#q{position:absolute;left:300px;top:650px;width:1000px;text-align:center;font-size:54px;font-weight:900;color:#1e2a5a;z-index:6}
+#opts{position:absolute;left:250px;top:720px;width:1100px;display:flex;justify-content:center;gap:40px;z-index:6}
+.opt{width:250px;height:150px;background:#fff;border:0;border-radius:26px;box-shadow:0 8px 0 rgba(0,0,0,.18);position:relative;cursor:pointer;font:inherit;font-size:80px;font-weight:900;color:#1e2a5a;overflow:hidden}
+.opt .art{left:10px;top:5px}
+#again{position:absolute;left:1340px;top:690px;font-size:30px;padding:16px 26px;display:none;z-index:7}
+#astro{position:absolute;left:60px;top:470px;width:220px;height:330px;z-index:4;pointer-events:none}
+#astro .art{left:0;top:0}
+#say{position:absolute;left:40px;top:330px;font-size:38px;max-width:270px;white-space:normal;text-align:center}
+#qn{position:absolute;left:80px;top:70px;font-size:36px;font-weight:900;background:#fff;border-radius:999px;padding:6px 22px;z-index:8;box-shadow:0 5px 0 rgba(0,0,0,.15)}
+</style></head>
+<body>
+<div id="stage">
+  <div id="bg"></div>
+  <div id="frameWrap"><div id="flip"><div class="face" id="photo"></div><div class="face back">⭐</div></div>
+    <svg id="ring" viewBox="0 0 110 110"><circle cx="55" cy="55" r="46" stroke="#e3e8f4"/><circle id="arc" cx="55" cy="55" r="46" stroke="#ff8a1f" stroke-dasharray="289" stroke-dashoffset="0" transform="rotate(-90 55 55)"/><text x="55" y="74" text-anchor="middle" id="sec">5</text></svg></div>
+  <div id="q"></div>
+  <div id="opts"></div>
+  <button class="bigbtn" id="again">👀 LOOK AGAIN</button>
+  <div id="astro"></div>
+  <div class="bubble" id="say" style="display:none"></div>
+  <div id="qn">1 / 5</div>
+</div>
+<script>
+var AUDIO={};
+var PICS={ bg:'../images/l5/scrapbook.jpg', photo:'../images/l5/memory_circus.jpg', astro:'../images/astro.png',
+  stilts:'../images/l5/p_stilts.png', clown:'../images/l5/p_clown.png', strongman:'../images/l5/p_strongman.png', juggler:'../images/l5/p_juggler.png', magician:'../images/l5/p_magician.png',
+  happy:'../images/l5/clown_happy.png', sleepy:'../images/l5/clown_sleepy.png', sad:'../images/l5/clown_sad.png', ball:'../images/l5/ball.png', hat:'../images/l3/hat.png', dumbbell:'../images/l5/dumbbell.png' };
+/* Where each answer is in the designer's photo (percent), used for the red circle. Check with ?debug=1. */
+var ZONES={ juggler:{x:82,y:55,r:12}, clown:{x:36,y:60,r:10}, balloons:{x:50,y:12,r:40}, stilts:{x:12,y:45,r:14}, dumbbell:{x:60,y:50,r:10} };
+</script>
+<script>
+/* ===== Astro & Alex shared game base ===== */
+var G=(function(){
+  var W=1600,H=900, stage=document.getElementById('stage'), scale=1;
+  var DEBUG=/[?&]debug=1/.test(location.search);
+  function fit(){
+    scale=Math.min(window.innerWidth/W, window.innerHeight/H);
+    stage.style.transform='translate(-50%,-50%) scale('+scale+')';
+  }
+  window.addEventListener('resize',fit); fit();
+  function toStage(e){
+    var r=stage.getBoundingClientRect();
+    return {x:(e.clientX-r.left)/scale, y:(e.clientY-r.top)/scale};
+  }
+  /* ---------- speech: one queue, never overlapping ---------- */
+  var AUDIO=window.AUDIO||{}; var voice=null; var queue=Promise.resolve(); var pending=0;
+  function pickVoice(){
+    if(!('speechSynthesis' in window)) return;
+    var vs=speechSynthesis.getVoices().filter(function(v){return /^en[-_]US/i.test(v.lang);});
+    var pref=['Samantha','Google US English','Microsoft Aria','Microsoft Jenny','Karen','Ava','Allison'];
+    for(var i=0;i<pref.length;i++){ for(var j=0;j<vs.length;j++){ if(vs[j].name.indexOf(pref[i])>=0){voice=vs[j];return;} } }
+    voice=vs[0]||null;
+  }
+  if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+  function speakNow(text){
+    return new Promise(function(res){
+      var done=false; function fin(){ if(!done){done=true; res();} }
+      var safety=setTimeout(fin, 1800+text.length*95);
+      var file=AUDIO[text];
+      if(file){ var a=new Audio(file); a.onended=fin; a.onerror=fin; a.play().catch(fin); return; }
+      if(!('speechSynthesis' in window)){ setTimeout(fin, 500+text.length*55); return; }
+      var u=new SpeechSynthesisUtterance(text.replace(/\.\.\./g,', '));
+      u.lang='en-US'; u.rate=0.9; u.pitch=1.05; if(voice) u.voice=voice;
+      u.onend=function(){clearTimeout(safety); setTimeout(fin,120);}; u.onerror=function(){clearTimeout(safety); fin();};
+      speechSynthesis.speak(u);
+    });
+  }
+  function say(text){ pending++; queue=queue.then(function(){return speakNow(text);}).then(function(){pending--;}); return queue; }
+  function sayIfFree(text){ if(pending>0) return queue; return say(text); }
+  function busy(){ return pending>0; }
+  /* ---------- sound effects ---------- */
+  var ac=null;
+  function audioInit(){ try{ if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); }catch(e){} }
+  function tone(f,d,type,vol,f2,delay){
+    if(!ac) return; var t=ac.currentTime+(delay||0);
+    var o=ac.createOscillator(), g=ac.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||0.2,t+0.015); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+0.05);
+  }
+  function noise(d,vol,freq,delay){
+    if(!ac) return; var t=ac.currentTime+(delay||0), n=Math.floor(ac.sampleRate*d), b=ac.createBuffer(1,n,ac.sampleRate), ch=b.getChannelData(0);
+    for(var i=0;i<n;i++) ch[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/n);
+    var s=ac.createBufferSource(); s.buffer=b; var f=ac.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq||800; f.Q.value=0.7;
+    var g=ac.createGain(); g.gain.value=vol||0.3; s.connect(f); f.connect(g); g.connect(ac.destination); s.start(t);
+  }
+  var sfx={
+    pop:function(){tone(520,0.12,'sine',0.25,980);},
+    ding:function(){tone(1046,0.35,'triangle',0.2); tone(1568,0.4,'triangle',0.12,null,0.08);},
+    boing:function(){tone(220,0.35,'square',0.08,520);},
+    soft:function(){tone(300,0.15,'sine',0.12,240);},
+    whoosh:function(){noise(0.9,0.35,600);},
+    cheer:function(){[523,659,784,1046].forEach(function(f,i){tone(f,0.25,'triangle',0.18,null,i*0.09);});},
+    flip:function(){noise(0.12,0.25,2500);},
+    sparkle:function(){[1318,1568,2093].forEach(function(f,i){tone(f,0.18,'sine',0.1,null,i*0.06);});},
+    thump:function(){tone(120,0.2,'sine',0.35,60);},
+    click:function(){tone(900,0.05,'square',0.06);}
+  };
+  /* ---------- pictures with placeholders ---------- */
+  var img={};
+  function loadOne(paths){
+    paths=[].concat(paths);
+    return new Promise(function(res){
+      var i=0; (function next(){
+        if(i>=paths.length) return res(null);
+        var im=new Image(); im.onload=function(){res(im);}; im.onerror=function(){i++; next();}; im.src=paths[i];
+      })();
+    });
+  }
+  function loadPics(P){
+    var keys=Object.keys(P);
+    return Promise.all(keys.map(function(k){return loadOne(P[k]).then(function(im){img[k]=im;});}));
+  }
+  /* art(key,{x,y,w,h,emoji,word,cls,parent,z}) -> absolutely positioned element with the picture or a placeholder */
+  function art(key,o){
+    o=o||{}; var d=document.createElement('div'); d.className='art '+(o.cls||'');
+    if(o.w!=null){d.style.width=o.w+'px';} if(o.h!=null){d.style.height=o.h+'px';}
+    if(o.x!=null) d.style.left=o.x+'px'; if(o.y!=null) d.style.top=o.y+'px'; if(o.z!=null) d.style.zIndex=o.z;
+    var im=img[key];
+    if(im){ var c=document.createElement('img'); c.src=im.src; c.alt=''; d.appendChild(c); d.dataset.real='1'; }
+    else{ var p=document.createElement('div'); p.className='ph'; p.style.fontSize=Math.round(Math.min(o.w||160,o.h||160)*0.62)+'px';
+      p.innerHTML='<div class="e">'+(o.emoji||'🖼️')+'</div>'+(o.word?'<div class="w">'+o.word+'</div>':''); d.appendChild(p); }
+    (o.parent||stage).appendChild(d); return d;
+  }
+  function has(key){ return !!img[key]; }
+  /* ---------- helpers ---------- */
+  function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+  function shuffle(a){a=a.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t;} return a;}
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function el(tag,cls,parent,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; (parent||stage).appendChild(e); return e;}
+  function anim(e,cls){ e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); setTimeout(function(){e.classList.remove(cls);},600); }
+  /* ---------- confetti ---------- */
+  var cv=el('canvas',''); cv.id='confetti'; cv.width=W; cv.height=H; var cx=cv.getContext('2d'), parts=[], running=false;
+  function confetti(n){
+    var cols=['#ff8a1f','#2fbf71','#3d8bff','#ffd23f','#ff5d8f','#9b5de5'];
+    for(var i=0;i<(n||160);i++) parts.push({x:rand(0,W),y:rand(-300,-20),vx:rand(-2,2),vy:rand(3,8),r:rand(0,6.3),vr:rand(-.2,.2),s:rand(10,20),c:cols[i%cols.length]});
+    if(!running){running=true; requestAnimationFrame(step);}
+  }
+  function step(){
+    cx.clearRect(0,0,W,H);
+    parts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.r+=p.vr; cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle=p.c; cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); cx.restore();});
+    parts=parts.filter(function(p){return p.y<H+40;});
+    if(parts.length) requestAnimationFrame(step); else {running=false; cx.clearRect(0,0,W,H);}
+  }
+  /* ---------- start / end screens ---------- */
+  function overlay(title,text,btn,cls){
+    var o=el('div','overlay'); var c=el('div','ovcard',o);
+    el('h1','',c,title); if(text) el('p','',c,text);
+    var b=el('button','bigbtn '+(cls||''),c,btn); return {o:o,b:b,c:c};
+  }
+  function boot(opt){
+    var s=overlay(opt.title,opt.instruction,'START');
+    s.b.disabled=true; s.b.style.opacity=.5;
+    loadPics(opt.pics||{}).then(function(){ s.b.disabled=false; s.b.style.opacity=1; if(opt.ready) opt.ready(); });
+    s.b.addEventListener('click',function(){
+      audioInit(); if('speechSynthesis' in window){ try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u);}catch(e){} }
+      sfx.click(); s.o.classList.add('hidden'); opt.start();
+    });
+    G.end=function(title,text){
+      sfx.cheer(); confetti(220);
+      var e=overlay(title||'Well done!',text||'','PLAY AGAIN','green');
+      e.o.style.background='rgba(19,32,74,.35)';
+      e.b.addEventListener('click',function(){ sfx.click(); e.o.remove(); opt.start(); });
+    };
+  }
+  return {W:W,H:H,stage:stage,DEBUG:DEBUG,toStage:toStage,say:say,sayIfFree:sayIfFree,busy:busy,sfx:sfx,img:img,art:art,has:has,
+    wait:wait,shuffle:shuffle,rand:rand,el:el,anim:anim,confetti:confetti,boot:boot,audioInit:audioInit,tone:tone,noise:noise,scale:function(){return scale;}};
+})();
+
+</script>
+<script>
+(function(){
+var EM={stilts:'🧍‍♂️',clown:'🤡',strongman:'🏋️',juggler:'👧',magician:'🧙',happy:'😄',sleepy:'😴',sad:'😢',ball:'⚽',hat:'🧢',dumbbell:'🏋️'};
+var QS=[
+ {q:'Who had a striped SHIRT?',opts:['juggler','strongman','magician'],a:'juggler',line:'The juggler had a striped SHIRT!',zone:'juggler'},
+ {q:'Was the clown HAPPY or SAD?',opts:['happy','sad','sleepy'],a:'happy',line:'The clown was HAPPY!',zone:'clown'},
+ {q:'How many balloons are there?',opts:[12,14,16],a:14,line:'There are FOURTEEN balloons!',zone:'balloons'},
+ {q:'Who is TALL?',opts:['stilts','clown','strongman'],a:'stilts',line:'He is TALL!',zone:'stilts'},
+ {q:'What does the strongman have?',opts:['ball','dumbbell','hat'],a:'dumbbell',line:'He has a dumbbell!',zone:'dumbbell'}
+];
+var S=G.stage, flip=document.getElementById('flip'), photo=document.getElementById('photo'), sayEl=document.getElementById('say');
+var qi=0, busy=true, circles=[];
+function talk(t){ sayEl.textContent=t; sayEl.style.display='block'; G.anim(sayEl,'bounce'); return G.say(t); }
+function e(p,t,x,y,s,extra){ var d=G.el('div','pc',p,t); d.style.cssText+=';left:'+x+'px;top:'+y+'px;font-size:'+s+'px;'+(extra||''); return d; }
+function drawPhoto(){
+  photo.innerHTML='';
+  if(G.has('photo')){ var im=document.createElement('img'); im.src=G.img.photo.src; photo.appendChild(im); return; }
+  photo.style.background='radial-gradient(ellipse at 50% 120%,#f2c46d 0 40%,#e85d5d 40% 42%,#5a2a7a 42%)';
+  for(var i=0;i<14;i++) e(photo,'🎈',40+i*67,8+(i%2)*26,58);
+  /* stilt-walker: TALL, red jacket */
+  e(photo,'🧍‍♂️',40,130,280,'transform:scaleY(1.32);transform-origin:50% 0');
+  /* happy clown */
+  e(photo,'🤡',300,300,150); e(photo,'🎉',430,290,60);
+  /* strongman with dumbbell */
+  e(photo,'🏋️',520,280,170);
+  /* juggler girl in striped shirt */
+  var jg=G.el('div','pc',photo); jg.style.cssText='left:760px;top:250px;width:170px;height:280px';
+  e(jg,'👧',30,0,110); var sh=G.el('div','pc',jg); sh.style.cssText='left:30px;top:110px;width:110px;height:110px;border-radius:20px;background:repeating-linear-gradient(0deg,#3d8bff 0 14px,#fff 14px 28px)';
+  e(jg,'🔴',0,-20,40); e(jg,'🟡',70,-60,40); e(jg,'🟢',130,-20,40);
+}
+var FALL={juggler:{x:845,y:370,r:130},clown:{x:375,y:375,r:110},balloons:{x:500,y:50,r:520},stilts:{x:145,y:320,r:160},dumbbell:{x:605,y:365,r:120}};
+function zoneFor(k){ if(G.has('photo')){ var z=ZONES[k]; return {x:z.x/100*972,y:z.y/100*532,r:z.r/100*972}; } return FALL[k]; }
+function circle(k){ var z=zoneFor(k); var c=G.el('div','circ',photo); var r=Math.min(z.r,260); c.style.cssText+=';left:'+(z.x-r)+'px;top:'+(z.y-(k==='balloons'?60:r))+'px;width:'+(2*r)+'px;height:'+(k==='balloons'?120:2*r)+'px';
+  if(k==='balloons'){ c.style.borderRadius='60px'; } circles.push(c); }
+async function show(sec){
+  flip.classList.remove('hide'); var arc=document.getElementById('arc'), t=document.getElementById('sec'); document.getElementById('ring').style.display='block';
+  for(var s=sec;s>0;s--){ t.textContent=s; arc.style.transition='none'; arc.style.strokeDashoffset=289*(1-s/sec); await G.wait(1000); G.tone(700,0.05,'sine',0.06); }
+  document.getElementById('ring').style.display='none'; flip.classList.add('hide'); G.sfx.flip(); await G.wait(700);
+}
+function optEl(o){ var b=G.el('button','opt',document.getElementById('opts'));
+  if(typeof o==='number'){ b.textContent=o; } else { G.art(o,{x:10,y:5,w:230,h:140,emoji:EM[o],word:o==='stilts'?'':'',parent:b}); }
+  b.dataset.o=o; b.onclick=function(){ choose(o,b); }; return b; }
+async function ask(){
+  busy=true; var Q=QS[qi]; document.getElementById('qn').textContent=(qi+1)+' / '+QS.length;
+  document.getElementById('opts').innerHTML=''; document.getElementById('q').textContent=''; document.getElementById('again').style.display='none';
+  circles.forEach(function(c){c.remove();}); circles=[];
+  await talk(qi===0?'Look at my circus photo!':'Look again!'); await show(5);
+  document.getElementById('q').textContent=Q.q; G.shuffle(Q.opts).forEach(optEl);
+  document.getElementById('again').style.display='block'; await talk(Q.q); busy=false;
+}
+async function choose(o,b){
+  if(busy) return; var Q=QS[qi];
+  if(o!==Q.a){ G.sfx.boing(); G.anim(b,'wobble'); return; }
+  busy=true; G.sfx.ding(); b.style.background='#d9f7e5'; document.getElementById('again').style.display='none';
+  flip.classList.remove('hide'); await G.wait(600); circle(Q.zone); G.sfx.sparkle(); await talk(Q.line); await G.wait(800);
+  qi++; if(qi<QS.length) ask(); else { await talk('You remember everything!'); G.end('You remember everything!','Great memory!'); }
+}
+document.getElementById('again').onclick=async function(){ if(busy) return; busy=true; this.style.display='none'; await show(3); this.style.display='block'; busy=false; };
+function start(){ var bg=document.getElementById('bg'); bg.innerHTML=''; if(G.has('bg')){ var im=document.createElement('img'); im.src=G.img.bg.src; bg.appendChild(im); } else G.el('div','book',bg);
+  var a=document.getElementById('astro'); a.innerHTML=''; G.art('astro',{x:0,y:0,w:220,h:330,emoji:'👽',parent:a});
+  drawPhoto(); if(G.DEBUG) Object.keys(FALL).forEach(circle); qi=0; ask(); }
+window.__game={state:function(){return {qi:qi,busy:busy,a:QS[qi]&&QS[qi].a};}};
+G.boot({title:'Remember This?',instruction:'Look at the photo carefully for 5 seconds.<br>Then answer Astro\'s question.<br><b>Tap</b> the right picture!',pics:PICS,start:start});
+})();
+</script>
+</body></html>
