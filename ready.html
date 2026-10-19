@@ -32,18 +32,11 @@ body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Tre
 
 .bot{position:absolute}
 .bot .art{left:0;top:0}
-.rb{position:absolute;inset:0}
-.rb .body{position:absolute;left:18%;top:28%;width:64%;height:52%;background:radial-gradient(circle at 35% 30%,#e8eef9,#b6c3dc);border-radius:46%;border:6px solid #6b7690}
-.rb .scr{position:absolute;left:28%;top:36%;width:44%;height:26%;background:#20345f;border-radius:30%;display:flex;align-items:center;justify-content:center;gap:14%}
-.rb .scr i{width:16%;height:40%;background:#7cf3ff;border-radius:50%;box-shadow:0 0 10px #7cf3ff}
-.rb .ant{position:absolute;left:48%;top:14%;width:4%;height:15%;background:#6b7690}
-.rb .ant:after{content:'';position:absolute;left:-90%;top:-60%;width:280%;height:40%;border-radius:50%;background:#ff5d8f}
-.rb .wheel{position:absolute;left:38%;top:78%;width:24%;height:18%;border-radius:50%;background:#2d3644;border:5px solid #9aa3b4}
-.rb .arm{position:absolute;top:50%;width:22%;height:6%;background:#6b7690;border-radius:20px}
-.rb .arm.l{left:2%;transform-origin:100% 50%;transform:rotate(20deg)}.rb .arm.r{right:2%;transform-origin:0 50%;transform:rotate(-20deg)}
-.rb.up .arm.l{transform:rotate(70deg)}.rb.up .arm.r{transform:rotate(-70deg)}
-.rb .prop{position:absolute;line-height:1;text-align:center}
-.rb.soak .body{background:radial-gradient(circle at 35% 30%,#cfe6ff,#7fa9d9)}
+.rx{position:absolute;inset:0}
+.rx .dog{position:absolute;left:0;right:0;bottom:0;text-align:center;line-height:1}
+.rx.wag .dog{animation:wagr .35s ease-in-out infinite alternate;transform-origin:50% 100%}
+@keyframes wagr{from{rotate:-6deg}to{rotate:6deg}}
+.rx .prop{position:absolute;line-height:1;text-align:center}
 
 #bg{position:absolute;inset:0;background:linear-gradient(#8fd3ff 0 62%,#a3a8b3 62% 68%,#7ccf6a 68%)}
 #bg img{width:100%;height:100%;object-fit:cover}
@@ -91,7 +84,7 @@ body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Tre
 var AUDIO={};
 var PICS={ bg:'images/l6/bus_stop.jpg', astro:['images/l6/astro_ready.png','images/astro.png'], bus:'images/l6/bus.png' };
 ['wake','shower','brush','dressed','breakfast','hurry'].forEach(function(k){ PICS['card_'+k]='images/l6/card_'+k+'.png'; });
-['idle','wave'].forEach(function(k){ PICS['bot_'+k]='images/l6/bot_'+k+'.png'; });
+['idle','wag'].forEach(function(k){ PICS['coco_'+k]='images/l6/coco_'+k+'.png'; });
 </script>
 <script>
 /* ===== Astro & Alex shared game base ===== */
@@ -117,7 +110,7 @@ var G=(function(){
     voice=vs[0]||null;
   }
   if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
-  function speakNow(text){
+  function speakNow(text,o){ o=o||{};
     return new Promise(function(res){
       var done=false; function fin(){ if(!done){done=true; res();} }
       var safety=setTimeout(fin, 1800+text.length*95);
@@ -125,12 +118,12 @@ var G=(function(){
       if(file){ var a=new Audio(file); a.onended=fin; a.onerror=fin; a.play().catch(fin); return; }
       if(!('speechSynthesis' in window)){ setTimeout(fin, 500+text.length*55); return; }
       var u=new SpeechSynthesisUtterance(text.replace(/\.\.\./g,', '));
-      u.lang='en-US'; u.rate=0.9; u.pitch=1.05; if(voice) u.voice=voice;
+      u.lang='en-US'; u.rate=o.rate||0.9; u.pitch=o.pitch||1.05; if(voice) u.voice=voice;
       u.onend=function(){clearTimeout(safety); setTimeout(fin,120);}; u.onerror=function(){clearTimeout(safety); fin();};
       speechSynthesis.speak(u);
     });
   }
-  function say(text){ pending++; queue=queue.then(function(){return speakNow(text);}).then(function(){pending--;}); return queue; }
+  function say(text,o){ pending++; queue=queue.then(function(){return speakNow(text,o);}).then(function(){pending--;}); return queue; }
   function sayIfFree(text){ if(pending>0) return queue; return say(text); }
   function busy(){ return pending>0; }
   /* ---------- sound effects ---------- */
@@ -232,15 +225,24 @@ var G=(function(){
     wait:wait,shuffle:shuffle,rand:rand,el:el,anim:anim,confetti:confetti,boot:boot,audioInit:audioInit,tone:tone,noise:noise,scale:function(){return scale;}};
 })();
 
-/* the Morning-Bot: designer picture images/l6/bot_<pose>.png if present, otherwise drawn here */
-function drawBot(parent,w,h,pose){
-  parent.innerHTML=''; var key='bot_'+pose;
+/* Coco, Alex's dog: designer picture images/l6/coco_<pose>.png if present, otherwise drawn here (poses: idle, wag, sleep, splash, bark) */
+function drawRex(parent,w,h,pose){
+  parent.innerHTML=''; var key='coco_'+pose;
   if(G.has(key)){ G.art(key,{x:0,y:0,w:w,h:h,parent:parent}); return; }
-  var r=G.el('div','rb'+(pose==='wake'||pose==='wave'?' up':'')+(pose==='soaked'?' soak':''),parent);
-  G.el('div','ant',r); G.el('div','arm l',r); G.el('div','arm r',r); G.el('div','body',r); var s=G.el('div','scr',r); G.el('i','',s); G.el('i','',s); G.el('div','wheel',r);
-  var P={shower:['🚿','35%','-6%',0.32],brush:['🪥','62%','34%',0.22],dressed:['👕','30%','52%',0.3],breakfast:['🥣','62%','48%',0.24],soaked:['💦','60%','10%',0.26],wave:['👋','72%','22%',0.22],wake:['⭐','40%','-4%',0.2]};
-  var p=P[pose]; if(p){ var e=G.el('div','prop',r,p[0]); e.style.left=p[1]; e.style.top=p[2]; e.style.fontSize=Math.round(w*p[3])+'px'; }
-  if(pose==='soaked'){ var s2=G.el('div','prop',r,'👕'); s2.style.left='30%'; s2.style.top='52%'; s2.style.fontSize=Math.round(w*0.3)+'px'; s2.style.filter='hue-rotate(160deg) brightness(.8)'; }
+  var r=G.el('div','rx'+(pose==='wag'?' wag':''),parent);
+  var d=G.el('div','dog',r,'🐕'); d.style.fontSize=Math.round(Math.min(w,h)*0.78)+'px';
+  var P={sleep:['💤','62%','0%'],splash:['🫧','60%','2%'],bark:['❗','66%','0%'],wag:['💛','66%','4%']};
+  var p=P[pose]; if(p){ var e=G.el('div','prop',r,p[0]); e.style.left=p[1]; e.style.top=p[2]; e.style.fontSize=Math.round(w*0.24)+'px'; }
+}
+/* Astro acting out a routine step: images/l6/astro_do_<step>.png if present, otherwise Astro + a picture of the action */
+function drawAstroDo(parent,w,h,step){
+  parent.innerHTML=''; var key='astro_do_'+step;
+  if(G.has(key)){ G.art(key,{x:0,y:0,w:w,h:h,parent:parent}); return; }
+  var r=G.el('div','rx',parent); var a=G.el('div','',r); a.style.cssText='position:absolute;left:0;top:0;width:'+w+'px;height:'+h+'px';
+  G.art('astro',{x:0,y:0,w:w,h:h,emoji:'👽',parent:a});
+  var P={wake:['⏰','64%','2%'],shower:['🚿','58%','-4%'],brush:['🪥','60%','24%'],dressed:['👕','58%','40%'],breakfast:['🥣','60%','44%'],hurry:['🏃','62%','30%'],soaked:['💦','58%','4%'],sleepy:['💤','60%','2%'],ready:['👍','64%','30%']};
+  var p=P[step]; if(p){ var e=G.el('div','prop',r,p[0]); e.style.left=p[1]; e.style.top=p[2]; e.style.fontSize=Math.round(w*0.3)+'px'; }
+  if(step==='soaked'){ a.style.filter='saturate(.6) brightness(.9)'; }
 }
 
 </script>
@@ -253,7 +255,7 @@ function scene(){
   var bg=document.getElementById('bg'); bg.innerHTML='';
   if(G.has('bg')){ var im=document.createElement('img'); im.src=G.img.bg.src; bg.appendChild(im); }
   else { var h=G.el('div','house',bg); G.el('div','hwin',h); G.el('div','hdoor',h); G.el('div','stopsign',bg,'🚏'); }
-  drawBot(document.getElementById('botwin'),150,170,'idle');
+  drawRex(document.getElementById('botwin'),150,170,'idle');
   var b=document.getElementById('bus'); b.innerHTML=''; b.style.transition='none'; b.style.left='1700px'; void b.offsetWidth; b.style.transition='';
   if(G.has('bus')) G.art('bus',{x:0,y:0,w:620,h:300,parent:b}); else { var d=G.el('div','busd',b); G.el('div','bdoor',d); [180,300,420].forEach(function(x){ var w=G.el('div','bw',d); w.style.left=x+'px'; }); [90,430].forEach(function(x){ var w=G.el('div','wh',d); w.style.left=x+'px'; }); }
 }
@@ -285,7 +287,7 @@ async function finish(){
   a.animate([{transform:'translateY(300px)',opacity:0},{transform:'translateY(-40px)',opacity:1},{transform:'translateY(0)'}],{duration:700});
   var rd=document.getElementById('ready'); rd.style.display='block'; G.anim(rd,'bounce');
   await talk('Say it with Astro!'); await G.wait(3000); await G.say("I'm READY!");
-  drawBot(document.getElementById('botwin'),150,170,'wave');
+  drawRex(document.getElementById('botwin'),150,170,'wag');
   document.getElementById('bus').style.left='900px'; G.noise(1.5,0.3,200); await G.wait(2300);
   var bd=document.querySelector('.busd'); if(bd) bd.classList.add('open'); G.sfx.ding(); G.confetti(200);
   await G.say('All aboard!'); await G.wait(800); busy=false;

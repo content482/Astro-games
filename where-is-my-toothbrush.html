@@ -32,18 +32,11 @@ body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Tre
 
 .bot{position:absolute}
 .bot .art{left:0;top:0}
-.rb{position:absolute;inset:0}
-.rb .body{position:absolute;left:18%;top:28%;width:64%;height:52%;background:radial-gradient(circle at 35% 30%,#e8eef9,#b6c3dc);border-radius:46%;border:6px solid #6b7690}
-.rb .scr{position:absolute;left:28%;top:36%;width:44%;height:26%;background:#20345f;border-radius:30%;display:flex;align-items:center;justify-content:center;gap:14%}
-.rb .scr i{width:16%;height:40%;background:#7cf3ff;border-radius:50%;box-shadow:0 0 10px #7cf3ff}
-.rb .ant{position:absolute;left:48%;top:14%;width:4%;height:15%;background:#6b7690}
-.rb .ant:after{content:'';position:absolute;left:-90%;top:-60%;width:280%;height:40%;border-radius:50%;background:#ff5d8f}
-.rb .wheel{position:absolute;left:38%;top:78%;width:24%;height:18%;border-radius:50%;background:#2d3644;border:5px solid #9aa3b4}
-.rb .arm{position:absolute;top:50%;width:22%;height:6%;background:#6b7690;border-radius:20px}
-.rb .arm.l{left:2%;transform-origin:100% 50%;transform:rotate(20deg)}.rb .arm.r{right:2%;transform-origin:0 50%;transform:rotate(-20deg)}
-.rb.up .arm.l{transform:rotate(70deg)}.rb.up .arm.r{transform:rotate(-70deg)}
-.rb .prop{position:absolute;line-height:1;text-align:center}
-.rb.soak .body{background:radial-gradient(circle at 35% 30%,#cfe6ff,#7fa9d9)}
+.rx{position:absolute;inset:0}
+.rx .dog{position:absolute;left:0;right:0;bottom:0;text-align:center;line-height:1}
+.rx.wag .dog{animation:wagr .35s ease-in-out infinite alternate;transform-origin:50% 100%}
+@keyframes wagr{from{rotate:-6deg}to{rotate:6deg}}
+.rx .prop{position:absolute;line-height:1;text-align:center}
 
 #view{position:absolute;inset:0;overflow:hidden;background:#e8d9c0}
 #room{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0;transition:transform .35s}
@@ -92,7 +85,7 @@ body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Tre
 var AUDIO={};
 var PICS={ bg:'images/l6/bedroom_messy.jpg', astro:['images/l6/astro_pj.png','images/astro.png'] };
 ['toothbrush','toothpaste','towel','soap','shirt','socks','cereal','spoon','alarm'].forEach(function(k){ PICS['item_'+k]='images/l6/item_'+k+'.png'; });
-['idle','wave'].forEach(function(k){ PICS['bot_'+k]='images/l6/bot_'+k+'.png'; });
+['idle','wag'].forEach(function(k){ PICS['coco_'+k]='images/l6/coco_'+k+'.png'; });
 /* where each hidden item sits in the room (stage px, item top-left). Adjust after the designer's room arrives; ?debug=1 outlines them. */
 var SPOTS={toothbrush:[1180,470,0.9,-30],toothpaste:[700,690,0.9,15],towel:[300,360,1.1,10],soap:[1240,780,0.8,0],shirt:[880,250,1.0,-12],
   socks:[540,520,0.85,20],cereal:[1040,700,1.0,-8],spoon:[160,480,0.8,40],alarm:[640,170,0.9,0]};
@@ -121,7 +114,7 @@ var G=(function(){
     voice=vs[0]||null;
   }
   if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
-  function speakNow(text){
+  function speakNow(text,o){ o=o||{};
     return new Promise(function(res){
       var done=false; function fin(){ if(!done){done=true; res();} }
       var safety=setTimeout(fin, 1800+text.length*95);
@@ -129,12 +122,12 @@ var G=(function(){
       if(file){ var a=new Audio(file); a.onended=fin; a.onerror=fin; a.play().catch(fin); return; }
       if(!('speechSynthesis' in window)){ setTimeout(fin, 500+text.length*55); return; }
       var u=new SpeechSynthesisUtterance(text.replace(/\.\.\./g,', '));
-      u.lang='en-US'; u.rate=0.9; u.pitch=1.05; if(voice) u.voice=voice;
+      u.lang='en-US'; u.rate=o.rate||0.9; u.pitch=o.pitch||1.05; if(voice) u.voice=voice;
       u.onend=function(){clearTimeout(safety); setTimeout(fin,120);}; u.onerror=function(){clearTimeout(safety); fin();};
       speechSynthesis.speak(u);
     });
   }
-  function say(text){ pending++; queue=queue.then(function(){return speakNow(text);}).then(function(){pending--;}); return queue; }
+  function say(text,o){ pending++; queue=queue.then(function(){return speakNow(text,o);}).then(function(){pending--;}); return queue; }
   function sayIfFree(text){ if(pending>0) return queue; return say(text); }
   function busy(){ return pending>0; }
   /* ---------- sound effects ---------- */
@@ -236,15 +229,24 @@ var G=(function(){
     wait:wait,shuffle:shuffle,rand:rand,el:el,anim:anim,confetti:confetti,boot:boot,audioInit:audioInit,tone:tone,noise:noise,scale:function(){return scale;}};
 })();
 
-/* the Morning-Bot: designer picture images/l6/bot_<pose>.png if present, otherwise drawn here */
-function drawBot(parent,w,h,pose){
-  parent.innerHTML=''; var key='bot_'+pose;
+/* Coco, Alex's dog: designer picture images/l6/coco_<pose>.png if present, otherwise drawn here (poses: idle, wag, sleep, splash, bark) */
+function drawRex(parent,w,h,pose){
+  parent.innerHTML=''; var key='coco_'+pose;
   if(G.has(key)){ G.art(key,{x:0,y:0,w:w,h:h,parent:parent}); return; }
-  var r=G.el('div','rb'+(pose==='wake'||pose==='wave'?' up':'')+(pose==='soaked'?' soak':''),parent);
-  G.el('div','ant',r); G.el('div','arm l',r); G.el('div','arm r',r); G.el('div','body',r); var s=G.el('div','scr',r); G.el('i','',s); G.el('i','',s); G.el('div','wheel',r);
-  var P={shower:['🚿','35%','-6%',0.32],brush:['🪥','62%','34%',0.22],dressed:['👕','30%','52%',0.3],breakfast:['🥣','62%','48%',0.24],soaked:['💦','60%','10%',0.26],wave:['👋','72%','22%',0.22],wake:['⭐','40%','-4%',0.2]};
-  var p=P[pose]; if(p){ var e=G.el('div','prop',r,p[0]); e.style.left=p[1]; e.style.top=p[2]; e.style.fontSize=Math.round(w*p[3])+'px'; }
-  if(pose==='soaked'){ var s2=G.el('div','prop',r,'👕'); s2.style.left='30%'; s2.style.top='52%'; s2.style.fontSize=Math.round(w*0.3)+'px'; s2.style.filter='hue-rotate(160deg) brightness(.8)'; }
+  var r=G.el('div','rx'+(pose==='wag'?' wag':''),parent);
+  var d=G.el('div','dog',r,'🐕'); d.style.fontSize=Math.round(Math.min(w,h)*0.78)+'px';
+  var P={sleep:['💤','62%','0%'],splash:['🫧','60%','2%'],bark:['❗','66%','0%'],wag:['💛','66%','4%']};
+  var p=P[pose]; if(p){ var e=G.el('div','prop',r,p[0]); e.style.left=p[1]; e.style.top=p[2]; e.style.fontSize=Math.round(w*0.24)+'px'; }
+}
+/* Astro acting out a routine step: images/l6/astro_do_<step>.png if present, otherwise Astro + a picture of the action */
+function drawAstroDo(parent,w,h,step){
+  parent.innerHTML=''; var key='astro_do_'+step;
+  if(G.has(key)){ G.art(key,{x:0,y:0,w:w,h:h,parent:parent}); return; }
+  var r=G.el('div','rx',parent); var a=G.el('div','',r); a.style.cssText='position:absolute;left:0;top:0;width:'+w+'px;height:'+h+'px';
+  G.art('astro',{x:0,y:0,w:w,h:h,emoji:'👽',parent:a});
+  var P={wake:['⏰','64%','2%'],shower:['🚿','58%','-4%'],brush:['🪥','60%','24%'],dressed:['👕','58%','40%'],breakfast:['🥣','60%','44%'],hurry:['🏃','62%','30%'],soaked:['💦','58%','4%'],sleepy:['💤','60%','2%'],ready:['👍','64%','30%']};
+  var p=P[step]; if(p){ var e=G.el('div','prop',r,p[0]); e.style.left=p[1]; e.style.top=p[2]; e.style.fontSize=Math.round(w*0.3)+'px'; }
+  if(step==='soaked'){ a.style.filter='saturate(.6) brightness(.9)'; }
 }
 
 </script>
@@ -278,7 +280,7 @@ async function tapItem(k){
     var slot=document.querySelector('#need .slots i[data-k="'+k+'"]'); slot.classList.add('on'); slot.textContent=ITEMS[k].e||'✔️';
     G.say(ITEMS[k].w+'!');
     if(T.need.every(function(n){return found.indexOf(n)>=0;})){ playing=false; await G.wait(900); G.sfx.cheer(); await talk(T.done); ti++; found=[];
-      if(ti<order.length){ await G.wait(300); ask(); } else { drawBot(document.getElementById('bot'),200,230,'wave'); await talk('Thank you! Sorry, says the robot.'); G.end('You found everything!','The Morning-Bot says sorry!'); } }
+      if(ti<order.length){ await G.wait(300); ask(); } else { drawRex(document.getElementById('bot'),200,230,'wag'); await talk('Thank you! Coco says: Woof! Sorry!'); G.end('You found everything!','The Morning-Bot says sorry!'); } }
   } else { G.anim(it.el.firstChild||it.el,'wobble'); G.sfx.soft(); G.sayIfFree(ITEMS[k].w); }
 }
 function clearGlow(){ if(glowEl){ glowEl.remove(); glowEl=null; } document.getElementById('hint').style.display='none'; }
@@ -296,11 +298,11 @@ window.addEventListener('pointermove',function(e){ if(!pan) return; var p=G.toSt
 window.addEventListener('pointerup',function(){ pan=null; room.classList.remove('pan'); setTimeout(function(){panMoved=false;},0); });
 async function ask(){ showNeed(); last=Date.now(); await talk(order[ti].ask); playing=true; }
 function start(){ build(); document.getElementById('basket').innerHTML=''; var a=document.getElementById('astro'); a.innerHTML=''; G.art('astro',{x:0,y:0,w:220,h:320,emoji:'👽',parent:a});
-  drawBot(document.getElementById('bot'),200,230,'idle'); order=G.shuffle(TASKS); ti=0; found=[]; zoomed=false; applyZoom();
-  talk('The Morning-Bot hid everything!').then(ask); }
+  drawRex(document.getElementById('bot'),200,230,'idle'); order=G.shuffle(TASKS); ti=0; found=[]; zoomed=false; applyZoom();
+  talk('Oh no! Coco hid everything!').then(ask); }
 window.__game={state:function(){ var T=order[ti]; return {ti:ti,playing:playing,need:T?T.need.filter(function(n){return found.indexOf(n)<0;}):[],
   items:Object.keys(items).map(function(k){ var r=items[k].el.getBoundingClientRect(); return {k:k,cx:r.left+r.width/2,cy:r.top+r.height/2}; })}; }};
-G.boot({title:'Where Is My Toothbrush?',instruction:'The Morning-Bot hid things in the bedroom!<br>Listen to Astro and <b>tap</b> the things he needs.<br><span style="font-size:32px">Small screen? Press 🔍 ZOOM.</span>',pics:PICS,ready:build,start:start});
+G.boot({title:'Where Is My Toothbrush?',instruction:'Coco the dog hid things in the bedroom!<br>Listen to Astro and <b>tap</b> the things he needs.<br><span style="font-size:32px">Small screen? Press 🔍 ZOOM.</span>',pics:PICS,ready:build,start:start});
 })();
 </script>
 </body></html>

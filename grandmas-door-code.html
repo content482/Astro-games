@@ -98,7 +98,7 @@ var G=(function(){
     voice=vs[0]||null;
   }
   if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
-  function speakNow(text){
+  function speakNow(text,o){ o=o||{};
     return new Promise(function(res){
       var done=false; function fin(){ if(!done){done=true; res();} }
       var safety=setTimeout(fin, 1800+text.length*95);
@@ -106,12 +106,12 @@ var G=(function(){
       if(file){ var a=new Audio(file); a.onended=fin; a.onerror=fin; a.play().catch(fin); return; }
       if(!('speechSynthesis' in window)){ setTimeout(fin, 500+text.length*55); return; }
       var u=new SpeechSynthesisUtterance(text.replace(/\.\.\./g,', '));
-      u.lang='en-US'; u.rate=0.9; u.pitch=1.05; if(voice) u.voice=voice;
+      u.lang='en-US'; u.rate=o.rate||0.9; u.pitch=o.pitch||1.05; if(voice) u.voice=voice;
       u.onend=function(){clearTimeout(safety); setTimeout(fin,120);}; u.onerror=function(){clearTimeout(safety); fin();};
       speechSynthesis.speak(u);
     });
   }
-  function say(text){ pending++; queue=queue.then(function(){return speakNow(text);}).then(function(){pending--;}); return queue; }
+  function say(text,o){ pending++; queue=queue.then(function(){return speakNow(text,o);}).then(function(){pending--;}); return queue; }
   function sayIfFree(text){ if(pending>0) return queue; return say(text); }
   function busy(){ return pending>0; }
   /* ---------- sound effects ---------- */

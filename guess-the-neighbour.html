@@ -75,7 +75,7 @@ body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Tre
 <script>
 var AUDIO={};
 var PICS={ astro:'images/astro.png',
-  GLASSES:'images/l3/glasses.png', HAT:'images/l3/hat.png', SCARF:'images/l3/scarf.png', COAT:'images/l3/coat.png', JACKET:'images/l3/jacket.png', DRESS:'images/l3/dress.png' };
+  GLASSES:'images/l3/glasses.png', HAT:'images/l3/hat.png', SCARF:'images/l3/scarf.png', COAT:'images/l3/coat.png', SWEATER:'images/l3/sweater.png', DRESS:'images/l3/dress.png' };
 ["noa","tom","maya","ben","lia","omer","yael","dan","shira","adam","mia","eli"].forEach(function(n){ PICS['kid_'+n]='images/l3/kid_'+n+'.png'; });
 </script>
 <script>
@@ -102,7 +102,7 @@ var G=(function(){
     voice=vs[0]||null;
   }
   if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
-  function speakNow(text){
+  function speakNow(text,o){ o=o||{};
     return new Promise(function(res){
       var done=false; function fin(){ if(!done){done=true; res();} }
       var safety=setTimeout(fin, 1800+text.length*95);
@@ -110,12 +110,12 @@ var G=(function(){
       if(file){ var a=new Audio(file); a.onended=fin; a.onerror=fin; a.play().catch(fin); return; }
       if(!('speechSynthesis' in window)){ setTimeout(fin, 500+text.length*55); return; }
       var u=new SpeechSynthesisUtterance(text.replace(/\.\.\./g,', '));
-      u.lang='en-US'; u.rate=0.9; u.pitch=1.05; if(voice) u.voice=voice;
+      u.lang='en-US'; u.rate=o.rate||0.9; u.pitch=o.pitch||1.05; if(voice) u.voice=voice;
       u.onend=function(){clearTimeout(safety); setTimeout(fin,120);}; u.onerror=function(){clearTimeout(safety); fin();};
       speechSynthesis.speak(u);
     });
   }
-  function say(text){ pending++; queue=queue.then(function(){return speakNow(text);}).then(function(){pending--;}); return queue; }
+  function say(text,o){ pending++; queue=queue.then(function(){return speakNow(text,o);}).then(function(){pending--;}); return queue; }
   function sayIfFree(text){ if(pending>0) return queue; return say(text); }
   function busy(){ return pending>0; }
   /* ---------- sound effects ---------- */
@@ -221,11 +221,11 @@ var G=(function(){
 <script>
 (function(){
 /* exactly as in the designer sheet */
-var KIDS=[['NOA','g','DRESS',1,1,0],['TOM','b','SHIRT',1,0,0],['MAYA','g','COAT',0,1,1],['BEN','b','JACKET',0,0,1],['LIA','g','DRESS',0,0,0],['OMER','b','COAT',1,0,1],
-          ['YAEL','g','JACKET',1,1,0],['DAN','b','SHIRT',0,1,0],['SHIRA','g','COAT',1,0,0],['ADAM','b','JACKET',0,1,1],['MIA','g','SHIRT',0,0,1],['ELI','b','SHIRT',1,1,1]]
-  .map(function(k){ return {name:k[0],g:k[1],top:k[2],HAT:!!k[3],GLASSES:!!k[4],SCARF:!!k[5],DRESS:k[2]==='DRESS',COAT:k[2]==='COAT',JACKET:k[2]==='JACKET'}; });
-var QS=['GLASSES','HAT','SCARF','COAT','JACKET','DRESS'];
-var E={GLASSES:'👓',HAT:'🧢',SCARF:'🧣',COAT:'🥼',JACKET:'🧥',DRESS:'👗',SHIRT:'👕',PANTS:'👖'};
+var KIDS=[['NOA','g','DRESS',1,1,0],['TOM','b','SHIRT',1,0,0],['MAYA','g','COAT',0,1,1],['BEN','b','SWEATER',0,0,1],['LIA','g','DRESS',0,0,0],['OMER','b','COAT',1,0,1],
+          ['YAEL','g','SWEATER',1,1,0],['DAN','b','SHIRT',0,1,0],['SHIRA','g','COAT',1,0,0],['ADAM','b','SWEATER',0,1,1],['MIA','g','SHIRT',0,0,1],['ELI','b','SHIRT',1,1,1]]
+  .map(function(k){ return {name:k[0],g:k[1],top:k[2],HAT:!!k[3],GLASSES:!!k[4],SCARF:!!k[5],DRESS:k[2]==='DRESS',COAT:k[2]==='COAT',SWEATER:k[2]==='SWEATER'}; });
+var QS=['GLASSES','HAT','SCARF','COAT','SWEATER','DRESS'];
+var E={GLASSES:'👓',HAT:'🧢',SCARF:'🧣',COAT:'🥼',SWEATER:'🧥',DRESS:'👗',SHIRT:'👕',PANTS:'👖'};
 var S=G.stage, grid=document.getElementById('grid'), qbar=document.getElementById('qbar'), sayEl=document.getElementById('say');
 var cards=[], secret=null, mode='A', roundA=0, busy=false, asked=[];
 

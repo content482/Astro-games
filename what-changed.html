@@ -63,7 +63,7 @@ body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Tre
 </div>
 <script>
 var AUDIO={};
-var PICS={ astro:'images/astro.png', alex:'images/alex_friend.png', jacket:'images/l3/jacket.png',
+var PICS={ astro:'images/astro.png', alex:'images/alex_friend.png', sweater:'images/l3/sweater.png',
   shirt_a:'images/l5/shirt_a.jpg', shirt_b:'images/l5/shirt_b.jpg', face_a:'images/l5/face_a.jpg', face_b:'images/l5/face_b.jpg', balloons_a:'images/l5/balloons_a.jpg', balloons_b:'images/l5/balloons_b.jpg' };
 /* Where the change is in the designer's photo pairs (percent of the picture). Check with ?debug=1. */
 var ZONES={ shirt:{x:50,y:55,r:16}, face:{x:50,y:28,r:12}, balloons:{x:50,y:30,r:30} };
@@ -92,7 +92,7 @@ var G=(function(){
     voice=vs[0]||null;
   }
   if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
-  function speakNow(text){
+  function speakNow(text,o){ o=o||{};
     return new Promise(function(res){
       var done=false; function fin(){ if(!done){done=true; res();} }
       var safety=setTimeout(fin, 1800+text.length*95);
@@ -100,12 +100,12 @@ var G=(function(){
       if(file){ var a=new Audio(file); a.onended=fin; a.onerror=fin; a.play().catch(fin); return; }
       if(!('speechSynthesis' in window)){ setTimeout(fin, 500+text.length*55); return; }
       var u=new SpeechSynthesisUtterance(text.replace(/\.\.\./g,', '));
-      u.lang='en-US'; u.rate=0.9; u.pitch=1.05; if(voice) u.voice=voice;
+      u.lang='en-US'; u.rate=o.rate||0.9; u.pitch=o.pitch||1.05; if(voice) u.voice=voice;
       u.onend=function(){clearTimeout(safety); setTimeout(fin,120);}; u.onerror=function(){clearTimeout(safety); fin();};
       speechSynthesis.speak(u);
     });
   }
-  function say(text){ pending++; queue=queue.then(function(){return speakNow(text);}).then(function(){pending--;}); return queue; }
+  function say(text,o){ pending++; queue=queue.then(function(){return speakNow(text,o);}).then(function(){pending--;}); return queue; }
   function sayIfFree(text){ if(pending>0) return queue; return say(text); }
   function busy(){ return pending>0; }
   /* ---------- sound effects ---------- */
@@ -210,7 +210,7 @@ var G=(function(){
 </script>
 <script>
 (function(){
-var ROUNDS=[{k:'shirt',line:'Now it is a JACKET!'},{k:'face',line:'Alex is ANGRY! Just pretend!'},{k:'balloons',line:'Now there are TWENTY balloons!'}];
+var ROUNDS=[{k:'shirt',line:'Now it is a SWEATER!'},{k:'face',line:'Alex is ANGRY! Just pretend!'},{k:'balloons',line:'Now there are TWENTY balloons!'}];
 var PW=872, PH=532;
 var FALL={shirt:{x:436,y:270,r:120},face:{x:436,y:130,r:95},balloons:{x:436,y:150,r:330}};
 var S=G.stage, wrap=document.getElementById('wrap'), sayEl=document.getElementById('say');
@@ -224,7 +224,7 @@ function photo(k,which){
   if(k==='shirt'||k==='face'){
     p.style.background='linear-gradient(#ffe7b3 0 75%,#d9a86c 75%)'; e(p,'🖼️',60,60,120); e(p,'🪴',700,330,140);
     var a=G.el('div','pc',p); a.style.cssText='left:286px;top:20px;width:300px;height:500px'; G.art('alex',{x:0,y:0,w:300,h:500,emoji:'🧒',parent:a});
-    if(k==='shirt' && which==='b'){ var j=G.el('div','pc',p); j.style.cssText='left:326px;top:180px;width:220px;height:200px'; G.art('jacket',{x:0,y:0,w:220,h:200,emoji:'🧥',parent:j}); }
+    if(k==='shirt' && which==='b'){ var j=G.el('div','pc',p); j.style.cssText='left:326px;top:180px;width:220px;height:200px'; G.art('sweater',{x:0,y:0,w:220,h:200,emoji:'🧥',parent:j}); }
     if(k==='face' && which==='b'){ e(p,'😤',372,62,128); }
   } else {
     p.style.background='linear-gradient(#ffd1dc 0 70%,#c98b4f 70%)';
