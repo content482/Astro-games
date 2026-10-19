@@ -233,7 +233,13 @@
       });
     }
 
-    var LETTER_POOL = ['H','G','F','N','M','L','W','A','E','Y','O','I','S','T','B'];
+    var LETTER_POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    /* shuffled bag: every letter of the alphabet comes up once, in random order, before any repeats */
+    var letterBag = [];
+    function refillBag(){
+      letterBag = LETTER_POOL.slice();
+      for(var i=letterBag.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=letterBag[i]; letterBag[i]=letterBag[j]; letterBag[j]=t; }
+    }
     var SPAWN_INTERVAL_MS = 2500;
     var MAX_ONSCREEN = 5;
     var DURATION_MS = 120000; /* 2 minutes - change this one number to adjust length */
@@ -252,9 +258,13 @@
 
     function pickSpawnLetter(){
       var onscreen = currentFallingLetters();
-      var pool = LETTER_POOL.filter(function(l){ return onscreen.indexOf(l) === -1; });
-      if(pool.length === 0) pool = LETTER_POOL.slice();
-      return pool[Math.floor(Math.random()*pool.length)];
+      if(letterBag.length === 0) refillBag();
+      /* take the next bag letter that isn't already falling */
+      for(var i=letterBag.length-1;i>=0;i--){
+        if(onscreen.indexOf(letterBag[i]) === -1){ return letterBag.splice(i,1)[0]; }
+      }
+      refillBag();
+      return letterBag.pop();
     }
 
     function spawnLetter(){
@@ -418,6 +428,7 @@
       resize();
       fallLayer.innerHTML = '';
       fallingObjs = [];
+      letterBag = [];
       collectingObjs = [];
       score = 0;
       elapsedMs = 0;
