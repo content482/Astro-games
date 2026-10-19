@@ -64,10 +64,10 @@ body{font-family:ui-rounded,"Arial Rounded MT Bold","Nunito","Varela Round","Tre
 </div>
 <script>
 var AUDIO={};
-var PICS={ astro:'../images/astro.png', pj:'../images/l6/astro_pj.png',
-  card_wake:'../images/l6/card_wake.png', card_shower:'../images/l6/card_shower.png', card_brush:'../images/l6/card_brush.png', card_dressed:'../images/l6/card_dressed.png', card_breakfast:'../images/l6/card_breakfast.png' };
-for(var i=1;i<=5;i++){ PICS['s'+i+'_right']='../images/l6/video/step'+i+'_right.jpg'; PICS['s'+i+'_wrong']='../images/l6/video/step'+i+'_wrong.jpg'; }
-var VIDEO='../images/l6/video/';
+var PICS={ astro:'images/astro.png', pj:'images/l6/astro_pj.png',
+  card_wake:'images/l6/card_wake.png', card_shower:'images/l6/card_shower.png', card_brush:'images/l6/card_brush.png', card_dressed:'images/l6/card_dressed.png', card_breakfast:'images/l6/card_breakfast.png' };
+for(var i=1;i<=5;i++){ PICS['s'+i+'_right']='images/l6/video/step'+i+'_right.jpg'; PICS['s'+i+'_wrong']='images/l6/video/step'+i+'_wrong.jpg'; }
+var VIDEO='images/l6/video/';
 </script>
 <script>
 /* ===== Astro & Alex shared game base ===== */
@@ -272,7 +272,7 @@ function start(){
   STEPS.forEach(function(st){ var c=G.el('div','c',s); G.art('card_'+st.k,{x:0,y:0,w:200,h:110,emoji:st.card,parent:c}); });
   document.getElementById('replay').style.display='none'; si=0; intro();
 }
-PICS.alex='../images/alex_friend.png';
+PICS.alex='images/alex_friend.png';
 window.__game={state:function(){return {si:si,busy:busy,choices:chEl.style.display==='flex'};}};
 G.boot({title:"Astro's First Earth Morning",instruction:'Watch the cartoon.<br>When it stops, <b>tap</b> what Astro should do next!',pics:PICS,start:start});
 })();
